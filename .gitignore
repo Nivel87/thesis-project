@@ -1,0 +1,9 @@
+# Ignora le cartelle e i file specifici di Python
+__pycache__/
+.venv/
+*.pyc
+*.pyd
+
+# Ignora i file specifici di Pycharm o altri IDE
+.idea/
+.vscode/
