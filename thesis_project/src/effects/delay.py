@@ -21,11 +21,14 @@ class DelayEffect(AudioEffect):
         Applica l'effetto di delay al segnale audio.
 
         Args:
-            audio_signal (np.ndarray): Il segnale audio di input.
-            samplerate (int): La frequenza di campionamento.
+        - audio_signal (np.ndarray): Il segnale audio di input.
+        - delay_time (float): Tempo di ritardo in secondi.
+        - feedback (float): Percentuale del segnale ritardato da riaggiungere all'input per le ripetizioni successive.
+        - mix (float): Miscela tra il segnale originale e quello processato.
+        - samplerate (int): La frequenza di campionamento.
 
         Returns:
-            np.ndarray: Il segnale audio con l'effetto di delay applicato.
+        - np.ndarray: Il segnale audio con l'effetto di delay applicato.
         """
         # Calcola il numero di campioni per il ritardo
         delay_samples = int(self.delay_time * samplerate)

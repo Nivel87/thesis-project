@@ -51,15 +51,15 @@ def plot_audio_signals(original_signal: np.ndarray, processed_signal: np.ndarray
     """
     Visualizza il segnale originale e quello processato.
     """
-    plt.figure(figsize=(12, 6))
-    plt.subplot(2, 1, 1)
+    plt.figure(figsize=(12, 6))           #12 pollici in lunghezza, 6 pollici in altezza
+    plt.subplot(2, 1, 1)            #2 righe e 1 colonna, grafico 1
     plt.title('Segnale Audio Originale')
     plt.plot(original_signal)
     plt.xlabel('Campioni')
     plt.ylabel('Ampiezza')
     plt.grid(True)
 
-    plt.subplot(2, 1, 2)
+    plt.subplot(2, 1, 2)            #2 righe e 1 colonna, grafico 2
     plt.title(f'Segnale Audio con {effect_name}')
     plt.plot(processed_signal)
     plt.xlabel('Campioni')
@@ -132,7 +132,9 @@ def get_effect_and_params(selected_effect: str, selected_preset: str) -> AudioEf
             "grande_cattedrale": {"t60": 4.0, "num_reflections": 3000, "decay_rate": 8.0}
         },
         "delay": {
+            # Un delay molto breve, tipico della musica rockabilly, che produce un'eco singola e secca.
             "slapback_echo": {"delay_time": 0.08, "feedback": 0.2, "mix": 0.5},
+            # Un delay più lungo con più ripetizioni, utile per creare un'atmosfera o per "riempire" il suono
             "long_echo": {"delay_time": 0.5, "feedback": 0.6, "mix": 0.5}
         }
     }
@@ -178,11 +180,12 @@ def main():
     if result is None:
         return
 
-    original_signal, processed_signal, _ = result
+    original_signal, processed_signal, _ = result   #unpacking tupla (_ non serve per il plot, contiene la frequenza di campionamento)
 
     # Passa i segnali alla funzione di plot
     plot_audio_signals(original_signal, processed_signal, type(effect).__name__)
 
-
+# Questa è la convenzione standard in Python per assicurarsi che il codice all'interno di main() venga eseguito
+# solo quando lo script è avviato direttamente e non quando viene importato come modulo in un altro script.
 if __name__ == "__main__":
     main()
