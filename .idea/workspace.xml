@@ -5,7 +5,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="58d2e125-0825-40c0-98e7-dc86428cba34" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/thesis_project/src/built_in/presets.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/thesis_project/src/effects/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/thesis_project/src/effects/chain.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/thesis_project/src/exceptions/custom_exceptions.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/thesis_project/src/functions/principal/effect_factory.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/thesis_project/src/functions/principal/plotter.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/thesis_project/src/functions/principal/signal_processing.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/thesis_project/src/functions/principal/user_interaction.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/thesis_project/src/functions/utility/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/thesis_project/src/functions/utility/data_conversion.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/thesis_project/src/functions/utility/file_handler.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/thesis_project/output/guitar_solo_reverbeffect_piccola_stanza.wav" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/thesis_project/src/effects/audio_effect.py" beforeDir="false" afterPath="$PROJECT_DIR$/thesis_project/src/effects/audio_effect.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/thesis_project/src/effects/delay.py" beforeDir="false" afterPath="$PROJECT_DIR$/thesis_project/src/effects/delay.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/thesis_project/src/effects/reverb.py" beforeDir="false" afterPath="$PROJECT_DIR$/thesis_project/src/effects/reverb.py" afterDir="false" />
@@ -25,6 +37,9 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 5
@@ -53,6 +68,9 @@
       <recent name="C:\Users\elede\PycharmProjects\PythonProject\thesis_project\src" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\elede\PycharmProjects\PythonProject\thesis_project\src\functions\utility" />
+      <recent name="C:\Users\elede\PycharmProjects\PythonProject\thesis_project\src\functions\principal" />
+      <recent name="C:\Users\elede\PycharmProjects\PythonProject\thesis_project\src\data" />
       <recent name="C:\Users\elede\PycharmProjects\PythonProject\thesis_project\src\effects" />
     </key>
   </component>

@@ -6,12 +6,12 @@ from thesis_project.src.effects.audio_effect import AudioEffect
 class ReverbEffect(AudioEffect):
     def __init__(self, t60: float, num_reflections: int, decay_rate: float):
         """
-        Inizializza l'effetto di riverbero.
+            Inizializza l'effetto di riverbero.
 
-        Parametri in input:
-        - t60: Tempo di riduzione del livello di pressione sonora a -60 dB
-        - num_reflections: densità delle prime riflessioni
-        - decay_rate: decadimento exp
+            Parametri in input:
+            - t60: Tempo di riduzione del livello di pressione sonora a -60 dB
+            - num_reflections: densità delle prime riflessioni
+            - decay_rate: decadimento exp
         """
 
         self.t60 = t60
@@ -20,13 +20,13 @@ class ReverbEffect(AudioEffect):
 
     def create_reverb_ir(self, samplerate: int) -> np.ndarray:
         """
-        Genera una risposta all'impulso (IR) sintetica per il riverbero.
+            Genera una risposta all'impulso (IR) sintetica per il riverbero.
 
-        Parametri in input:
-        - samplerate: La frequenza di campionamento del segnale audio.
+            Parametri in input:
+            - samplerate: La frequenza di campionamento del segnale audio.
 
-        Parametri in output:
-        - ir: L'array Numpy che rappresenta l'IR.
+            Parametri in output:
+            - ir: L'array Numpy che rappresenta l'IR.
         """
 
         ir_length = int(self.t60 * samplerate)
@@ -48,15 +48,15 @@ class ReverbEffect(AudioEffect):
 
     def apply_effect(self, audio_signal: np.ndarray, samplerate: int) -> np.ndarray:
         """
-        Applica l'effetto di riverbero tramite convoluzione.
+            Applica l'effetto di riverbero tramite convoluzione.
 
-        Parametri:
-        - audio_signal: Il segnale audio da processare
-        - samplerate: La frequenza di campionamento
-        - ir: La risposta all'impulso (IR) del riverbero
+            Parametri:
+            - audio_signal: Il segnale audio da processare
+            - samplerate: La frequenza di campionamento
+            - ir: La risposta all'impulso (IR) del riverbero
 
-        Ritorna:
-        - convolved_audio: Il segnale audio con il riverbero applicato.
+            Ritorna:
+            - convolved_audio: Il segnale audio con il riverbero applicato.
         """
 
         ir = self.create_reverb_ir(samplerate)

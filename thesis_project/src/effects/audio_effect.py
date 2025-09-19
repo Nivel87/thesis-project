@@ -18,5 +18,4 @@ class AudioEffect(ABC):
         Returns:
             np.ndarray: Il segnale audio con l'effetto applicato.
         """
-
         pass

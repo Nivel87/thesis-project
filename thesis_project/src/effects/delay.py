@@ -5,14 +5,13 @@ from thesis_project.src.effects.audio_effect import AudioEffect
 class DelayEffect(AudioEffect):
     def __init__(self, delay_time: float, feedback: float, mix: float):
         """
-        Inizializza l'effetto di delay.
+            Inizializza l'effetto di delay.
 
-        Parametri in input:
-        - delay_time: Tempo di ritardo in secondi.
-        - feedback: Percentuale del segnale ritardato da riaggiungere all'input per le ripetizioni successive. Valore tra 0.0 e 1.0.
-        - mix: Miscela dry/wet. Valore tra 0.0 e 1.0.
+            Parametri in input:
+            - delay_time: Tempo di ritardo in secondi.
+            - feedback: Percentuale del segnale ritardato da riaggiungere all'input per le ripetizioni successive. Valore tra 0.0 e 1.0.
+            - mix: Miscela dry/wet. Valore tra 0.0 e 1.0.
         """
-
         self.delay_time = delay_time
         self.feedback = feedback
         self.mix = mix
@@ -20,14 +19,14 @@ class DelayEffect(AudioEffect):
 
     def apply_effect(self, audio_signal: np.ndarray, samplerate: int) -> np.ndarray:
         """
-        Applica l'effetto di delay al segnale audio.
+            Applica l'effetto di delay al segnale audio.
 
-        Parametri in input:
-        - audio_signal: Il segnale audio originale
-        - samplerate: La frequenza di campionamento.
+            Parametri in input:
+            - audio_signal: Il segnale audio originale
+            - samplerate: La frequenza di campionamento.
 
-        Parametri in output:
-        - processed_signal: Il segnale audio con l'effetto di delay applicato.
+            Parametri in output:
+            - processed_signal: Il segnale audio con l'effetto di delay applicato.
         """
 
         delay_samples = int(self.delay_time * samplerate)
