@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Union
+from typing import Union, Any
 
 import numpy as np
 import soundfile as sf
@@ -94,6 +94,27 @@ def play_audio_from_choice(choice: str, input_signal: np.ndarray, processed_sign
     elif choice == 'none':
         print("Nessuna riproduzione. Continuo...")
 
+def get_stereo_input(file_input) -> Any:
+    """
+        Verifica se il file caricato è stereo. Se è mono, lo converte in stereo.
+
+        Parametri in input:
+        - file_input: file caricato.
+
+        Parametri in output:
+        - file_input: il file caricato (stereo), o il file (mono) caricato e convertito in stereo.
+    """
+    if file_input.ndim == 1:
+        print("Il file caricato è MONO.")
+        print("Il file verrà convertito in STEREO replicando il canale.")
+        file_input = np.stack((file_input, file_input), axis=1)
+        # print(f"Il file ora è stereo, la nuova forma è: {file_input.shape}")
+    else:
+        print("Il file caricato è STEREO.")
+
+    return file_input
+
+
 def get_audio_file() -> tuple[Path, np.ndarray, int] | None:
     """
         Permette all'utente di selezionare un file audio dalla cartella 'data' e lo carica in memoria.
@@ -112,7 +133,7 @@ def get_audio_file() -> tuple[Path, np.ndarray, int] | None:
     #selected_file_path = data_path / 'guitar_solo.wav'
 
     try:
-        audio_input, samplerate = sf.read(selected_file_path)
+        file_input, samplerate = sf.read(selected_file_path)
     except FileNotFoundError:
         print(f"Errore: il file '{selected_file_path}' non è stato trovato.")
         return None
@@ -121,6 +142,9 @@ def get_audio_file() -> tuple[Path, np.ndarray, int] | None:
         return None
 
     print(f"Caricamento di '{selected_file_path}'...")
+
+    # verifica mono/stereo
+    audio_input = get_stereo_input(file_input)
 
     # Chiede all'utente se vuole ascoltare l'audio di input
     choice = get_playback_choice("input_only")

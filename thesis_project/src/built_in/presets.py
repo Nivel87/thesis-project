@@ -60,7 +60,6 @@ def get_delay_params() -> Dict[str, float]:
 
     return {"delay_time": delay_time, "feedback": feedback, "mix": mix}
 
-
 # La mappa principale che registra tutti gli effetti
 EFFECT_REGISTRY = {
     "reverb": {

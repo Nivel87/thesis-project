@@ -1,24 +1,22 @@
 from thesis_project.src.effects import *
 from thesis_project.src.functions.utility.file_handler import *
 
-def process_audio_file(effect: AudioEffect, selected_preset: str) -> tuple[np.ndarray, np.ndarray, int] | None:
+def process_audio_file(input_file_path, audio_input, samplerate, effect: AudioEffect, selected_preset: str, selected_channel_mode: str) -> tuple[np.ndarray, np.ndarray, int] | None:
     """
         Applica un effetto audio a un file e restituisce i segnali e il samplerate.
 
         Parametri in input:
-        - effect: l'effetto da applicare
-        - selected_preset: il nome del preset di parametri con i quali applicare l'effetto
+        - input_file_path: Path del file audio.
+        - audio_input: file audio.
+        - samplerate: samplerate del audio.
+        - effect: l'effetto da applicare.
+        - selected_preset: il nome del preset di parametri con i quali applicare l'effetto.
 
         Parametri in output:
         - audio_input, processed_audio, samplerate: segnale di ingresso, segnale processato, frequenza di campionamento
     """
-
-    #prendi file input
-    input_file_path, audio_input, samplerate = get_audio_file()
-
-    #applica effetto
-    print(f"Applicazione dell'effetto {type(effect).__name__} con il preset '{selected_preset}'...")
-    processed_audio = effect.apply_effect(audio_input, samplerate)
+    print(f"Applicazione dell'effetto {type(effect).__name__} con il preset '{selected_preset}' e la modalità '{selected_channel_mode}'...")
+    processed_audio = effect.apply_effect(audio_input, samplerate, selected_channel_mode)
     print("Effetto applicato con successo.")
 
     #crea output

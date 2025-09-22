@@ -18,6 +18,7 @@ class ReverbEffect(AudioEffect):
         self.num_reflections = num_reflections
         self.decay_rate = decay_rate
 
+
     def create_reverb_ir(self, samplerate: int) -> np.ndarray:
         """
             Genera una risposta all'impulso (IR) sintetica per il riverbero.
@@ -46,24 +47,36 @@ class ReverbEffect(AudioEffect):
 
         return ir
 
-    def apply_effect(self, audio_signal: np.ndarray, samplerate: int) -> np.ndarray:
+
+    def apply_effect(self, audio_signal: np.ndarray, samplerate: int, channel_mode: str = 'both') -> np.ndarray:
         """
             Applica l'effetto di riverbero tramite convoluzione.
 
-            Parametri:
+            Parametri in input:
             - audio_signal: Il segnale audio da processare
             - samplerate: La frequenza di campionamento
-            - ir: La risposta all'impulso (IR) del riverbero
+            - channel_mode: Specifica quali canali devono essere elaborati ('both', 'right', 'left')
 
-            Ritorna:
-            - convolved_audio: Il segnale audio con il riverbero applicato.
+            Parametri in output:
+            - processed_signal: Il segnale audio con il riverbero applicato.
         """
-
         ir = self.create_reverb_ir(samplerate)
-        convolved_audio = fftconvolve(audio_signal, ir, mode='full')
 
-        # Normalizzazione
-        if np.max(np.abs(convolved_audio)) > 0:
-            convolved_audio /= np.max(np.abs(convolved_audio))
+        if audio_signal.ndim == 1:
+            processed_signal = fftconvolve(audio_signal, ir, mode='full')
+        elif audio_signal.ndim == 2:
+            processed_signal = audio_signal.copy()
 
-        return convolved_audio
+            if channel_mode == 'both' or channel_mode == 'left':
+                processed_signal[:, 0] = fftconvolve(audio_signal[:, 0], ir, mode='full')[:len(audio_signal)]
+
+            if channel_mode == 'both' or channel_mode == 'right':
+                processed_signal[:, 1] = fftconvolve(audio_signal[:, 1], ir, mode='full')[:len(audio_signal)]
+
+        else:
+            raise ValueError("Formato audio non supportato.")
+
+        if np.max(np.abs(processed_signal)) > 0:
+            processed_signal /= np.max(np.abs(processed_signal))
+
+        return processed_signal

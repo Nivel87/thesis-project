@@ -1,8 +1,12 @@
 from pathlib import Path
 from typing import Union
 
+import numpy as np
+
 from thesis_project.src.exceptions.custom_exceptions import GoBack
 from thesis_project.src.built_in.presets import EFFECT_REGISTRY, AVAILABLE_EFFECTS
+from thesis_project.src.functions.principal.plotter import plot_audio_signals
+
 
 def get_input_file_choice(data_path, audio_files) -> Union[Path, None]:
     """
@@ -85,14 +89,13 @@ def get_preset_choice(effect: str) -> str:
 
     while True:
         print(f"\nScegli un preset per il {effect.capitalize()}:")
-        print("0. Torna indietro")  # Aggiungi l'opzione "Torna indietro"
+        print("0. Torna indietro")
         for i, preset_name in enumerate(presets, 1):
             print(f"{i}. {preset_name}")
         print(f"{len(presets) + 1}. custom")
 
         choice = input(f"Inserisci il numero del preset: ")
 
-        # Gestisci l'opzione "Torna indietro"
         if choice == '0':
             raise GoBack("Torno al menu precedente")
 
@@ -126,7 +129,7 @@ def get_custom_parameters_choice(effect: str) -> dict[str, float]:
     return EFFECT_REGISTRY[effect]["get_custom_parameters_func"]()
 
 
-def get_user_choice() -> tuple[str, str | dict[str, float]]:
+def get_user_choice() -> tuple[str, str | dict[str, float], str]:
     """
         Gestisce il flusso completo della selezione, guidando l'utente prima nella scelta dell'effetto, poi del preset.
 
@@ -143,12 +146,21 @@ def get_user_choice() -> tuple[str, str | dict[str, float]]:
                 if preset == "custom":
                     try:
                         parameters = get_custom_parameters_choice(effect)
-                        return effect, parameters
+                        channel_mode = get_channel_mode_choice()
+                        return effect, parameters, channel_mode
+                    except GoBack:
+                        # Se viene sollevata un'eccezione in una delle due funzioni,
+                        # si esce da questo blocco try e si va direttamente alla riga successiva,
+                        # che è 'continue'
+                        print("Torno alla selezione del preset.")
+                        continue  # Torna al ciclo di selezione del preset
+                else:
+                    try:
+                        channel_mode = get_channel_mode_choice()
+                        return effect, preset, channel_mode
                     except GoBack:
                         print("Torno alla selezione del preset.")
                         continue
-                else:
-                    return effect, preset
             except GoBack:
                 print("Tornato alla selezione dell'effetto.")
                 break
@@ -166,11 +178,11 @@ def get_playback_choice(mode: str) -> str:
     """
     if mode == "input_only":
         print("\nVuoi ascoltare l'audio di input appena caricato?")
-        print("[1] Sì")
-        print("[2] No")
+        print("1. Sì")
+        print("2. No")
 
         while True:
-            choice = input("Seleziona un'opzione [1-2]: ")
+            choice = input("Seleziona un'opzione: ")
             if choice == '1':
                 return 'input'
             elif choice == '2':
@@ -180,13 +192,13 @@ def get_playback_choice(mode: str) -> str:
 
     elif mode == "output_comparison":
         print("\nOpzioni di riproduzione audio:")
-        print("[1] Ascolta solo audio di input")
-        print("[2] Ascolta solo audio processato")
-        print("[3] Ascolta entrambi (input e poi output) per un confronto")
-        print("[4] Non riprodurre nulla e continua")
+        print("1. Ascolta solo audio di input")
+        print("2. Ascolta solo audio processato")
+        print("3. Ascolta entrambi (input e poi output) per un confronto")
+        print("4. Non riprodurre nulla e continua")
 
         while True:
-            choice = input("Seleziona un'opzione [1-4]: ")
+            choice = input("Seleziona un'opzione: ")
             if choice == '1':
                 return 'input'
             elif choice == '2':
@@ -198,3 +210,58 @@ def get_playback_choice(mode: str) -> str:
             else:
                 print("Scelta non valida. Inserisci un numero tra 1 e 4.")
     return "none"
+
+def get_channel_mode_choice() -> str:
+    """
+        Richiede all'utente di scegliere la modalità del canale per l'applicazione dell'effetto.
+
+        Parametri in output:
+        - choice: La stringa che rappresenta il channel_mode ('both', 'left', o 'right').
+    """
+    print("\nScegli su quale canale applicare l'effetto:")
+    print("0. Torna indietro")
+    print("1. Entrambi i canali (both)")
+    print("2. Solo canale sinistro (left)")
+    print("3. Solo canale destro (right)")
+
+    while True:
+        choice = input("Inserisci il numero della tua scelta: ")
+        if choice == '0':
+            raise GoBack("Torno al menu di selezione del preset.")
+        elif choice == '1':
+            return 'both'
+        elif choice == '2':
+            return 'left'
+        elif choice == '3':
+            return 'right'
+        else:
+            print("Scelta non valida. Riprova.")
+
+def get_plot_choice(original_signal: np.ndarray, processed_signal: np.ndarray, effect_name: str):
+    """
+        Chiede all'utente quale stile di visualizzazione preferisce per i segnali audio stereo.
+
+        Parametri in input:
+        - original_signal: Il segnale audio originale.
+        - processed_signal: Il segnale audio processato.
+        - effect_name: Il nome dell'effetto applicato.
+    """
+    is_stereo = original_signal.ndim == 2 and original_signal.shape[1] == 2
+
+    if not is_stereo:
+        plot_audio_signals(original_signal, processed_signal, effect_name)
+        return
+
+    print("\nScegli lo stile di visualizzazione:")
+    print("1. Grafici separati per i canali (Sinistro/Destro)")
+    print("2. Canali sovrapposti sullo stesso grafico")
+
+    choice = input("Inserisci il numero della tua scelta: ")
+
+    if choice == '1':
+        plot_audio_signals(original_signal, processed_signal, effect_name, stereo_plot_style='separate')
+    elif choice == '2':
+        plot_audio_signals(original_signal, processed_signal, effect_name, stereo_plot_style='overlay')
+    else:
+        print("Scelta non valida. Verrà utilizzata la visualizzazione predefinita (grafici separati).")
+        plot_audio_signals(original_signal, processed_signal, effect_name, stereo_plot_style='separate')
