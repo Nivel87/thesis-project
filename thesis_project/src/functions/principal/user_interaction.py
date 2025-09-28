@@ -6,6 +6,7 @@ import numpy as np
 from thesis_project.src.exceptions.custom_exceptions import GoBack
 from thesis_project.src.built_in.presets import EFFECT_REGISTRY, AVAILABLE_EFFECTS
 from thesis_project.src.functions.principal.plotter import plot_audio_signals
+from thesis_project.src.functions.utility.data_conversion import get_validated_input
 
 
 def get_input_file_choice(data_path, audio_files) -> Union[Path, None]:
@@ -223,6 +224,24 @@ def get_channel_mode_choice() -> str:
             return 'right'
         else:
             print("Scelta non valida. Riprova.")
+
+
+def get_pan_choice() -> float:
+    """
+        Richiede all'utente di inserire il valore di Panning (bilanciamento stereo).
+
+        Parametri in output:
+        - pan_value: Valore float compreso tra -1.0 (Sinistra) e 1.0 (Destra).
+    """
+    pan = get_validated_input(
+        "Inserisci il valore di Panning (da -1.0 Sinistra a 1.0 Destra, 0.0 Centro): ",
+        lambda x: -1.0 <= x <= 1.0,
+        "Valore non valido. Il Panning deve essere compreso tra -1.0 e 1.0.",
+        allow_negative_one = True
+    )
+
+    return pan
+
 
 def get_plot_choice(original_signal: np.ndarray, processed_signal: np.ndarray, effect_name: str):
     """
