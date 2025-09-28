@@ -20,6 +20,6 @@ def process_audio_file(input_file_path, audio_input, samplerate, effect: AudioEf
     print("Effetto applicato con successo.")
 
     #crea output
-    get_output_file(input_file_path, audio_input, effect, selected_preset, processed_audio, samplerate)
+    get_output_file(input_file_path, audio_input, effect, selected_preset, selected_channel_mode, processed_audio, samplerate)
 
     return audio_input, processed_audio, samplerate

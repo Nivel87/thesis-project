@@ -123,14 +123,11 @@ def get_audio_file() -> tuple[Path, np.ndarray, int] | None:
         - selected_file_path, audio_input, samplerate: il percorso del file selezionato, il file audio e la sua frequenza di campionamento
     """
     data_path = script_dir / "data"
-
-    # Trova tutti i file .wav nella cartella 'data'
     audio_files = sorted(list(data_path.glob("*.wav")))
-
     selected_file_path = get_input_file_choice(data_path, audio_files)
 
     #X TEST!!!
-    #selected_file_path = data_path / 'guitar_solo.wav'
+    # selected_file_path = data_path / 'guitar_solo.wav'
 
     try:
         file_input, samplerate = sf.read(selected_file_path)
@@ -153,7 +150,7 @@ def get_audio_file() -> tuple[Path, np.ndarray, int] | None:
     return selected_file_path, audio_input, samplerate
 
 
-def get_output_file(input_file_path, input_audio, effect, selected_preset, processed_audio, samplerate):
+def get_output_file(input_file_path, input_audio, effect, selected_preset, selected_channel_mode, processed_audio, samplerate):
     """
         Salva il segnale audio processato in un file all'interno della cartella output.
         Permette all'utente di riprodurre e confrontare l'audio originale con quello processato finché non decide di continuare
@@ -170,7 +167,7 @@ def get_output_file(input_file_path, input_audio, effect, selected_preset, proce
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Genera il nome del file di output in modo sicuro per evitare sovrascritture
-    file_stem = f"{input_file_path.stem}_{type(effect).__name__.lower()}_{selected_preset.replace(' ', '_')}"
+    file_stem = f"{input_file_path.stem}_{type(effect).__name__.lower()}_{selected_preset.replace(' ', '_')}_{selected_channel_mode.replace(' ', '_')}"
     output_path = output_dir / f"{file_stem}.wav"
 
     counter = 1

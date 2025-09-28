@@ -54,13 +54,8 @@ def get_effect_choice() -> str:
     while True:
         print("\nQuale effetto vuoi applicare?")
         for i, effect_name in enumerate(AVAILABLE_EFFECTS, 1):
-            # Ottieni i dettagli dell'effetto usando la chiave
             effect_details = EFFECT_REGISTRY.get(effect_name, {})
-
-            # Estrai il nome descrittivo dell'effetto, se esiste
             display_name = effect_details.get("name", effect_name.capitalize())
-
-            # Stampa nel formato desiderato
             print(f"{i}. {display_name} ({effect_name.capitalize()})")
 
         choice = input("Inserisci il numero dell'effetto: ")
@@ -129,7 +124,7 @@ def get_custom_parameters_choice(effect: str) -> dict[str, float]:
     return EFFECT_REGISTRY[effect]["get_custom_parameters_func"]()
 
 
-def get_user_choice() -> tuple[str, str | dict[str, float], str]:
+def get_user_choice() -> tuple[str, str, dict[str, float | str], str] | None:
     """
         Gestisce il flusso completo della selezione, guidando l'utente prima nella scelta dell'effetto, poi del preset.
 
@@ -144,26 +139,18 @@ def get_user_choice() -> tuple[str, str | dict[str, float], str]:
                 preset = get_preset_choice(effect)
 
                 if preset == "custom":
-                    try:
-                        parameters = get_custom_parameters_choice(effect)
-                        channel_mode = get_channel_mode_choice()
-                        return effect, parameters, channel_mode
-                    except GoBack:
-                        # Se viene sollevata un'eccezione in una delle due funzioni,
-                        # si esce da questo blocco try e si va direttamente alla riga successiva,
-                        # che è 'continue'
-                        print("Torno alla selezione del preset.")
-                        continue  # Torna al ciclo di selezione del preset
+                    parameters = get_custom_parameters_choice(effect)
                 else:
-                    try:
-                        channel_mode = get_channel_mode_choice()
-                        return effect, preset, channel_mode
-                    except GoBack:
-                        print("Torno alla selezione del preset.")
-                        continue
+                    parameters = EFFECT_REGISTRY[effect]["presets"][preset]
+
+                channel_mode = get_channel_mode_choice()
+                return effect, preset, parameters, channel_mode
             except GoBack:
-                print("Tornato alla selezione dell'effetto.")
-                break
+                print("Torno alla selezione del preset.")
+                continue
+
+        print("Tornato alla selezione dell'effetto.")
+        break
 
 
 def get_playback_choice(mode: str) -> str:

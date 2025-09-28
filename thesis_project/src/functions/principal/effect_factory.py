@@ -1,8 +1,7 @@
-from pathlib import Path
 from thesis_project.src.built_in.presets import EFFECT_REGISTRY
 from thesis_project.src.effects import *
 
-def make_effect(selected_effect: str, selected_preset: str, base_path: Path = None) -> AudioEffect | None:
+def make_effect(selected_effect: str, selected_params: dict) -> AudioEffect | None:
     """
         Crea l'istanza dell'effetto e ne recupera i parametri dai preset definiti.
 
@@ -14,21 +13,16 @@ def make_effect(selected_effect: str, selected_preset: str, base_path: Path = No
         Parametri in output:
         - AudioEffect | None : l'oggetto AudioEffect costruito con il preset di parametri
     """
-
-    presets = EFFECT_REGISTRY.get(selected_effect, {}).get("presets")
-    #print(f"{selected_effect}: {presets}")
-    if not presets:
-        return None
-
-    params = presets.get(selected_preset)
-    #print(f"{selected_preset}: {params}")
-    if not params:
+    # print(f"{selected_params}: {selected_params}")
+    if not selected_params:
         return None
 
     # Infine, crea l'istanza dell'effetto appropriato
     if selected_effect == "reverb":
-        return ReverbEffect(**params)
+        return ReverbEffect(**selected_params)
     elif selected_effect == "delay":
-        return DelayEffect(**params)
-
-    return None
+        return DelayEffect(**selected_params)
+    elif selected_effect == "cabinet":
+        return CabinetEffect(**selected_params)
+    else:
+        raise ValueError(f"Effetto '{selected_effect}' non riconosciuto.")

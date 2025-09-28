@@ -8,28 +8,23 @@ from thesis_project.src.functions.utility.file_handler import get_audio_file
 
 #ping pong delay
 
-#CABINET
-#funzioni che approx risposte all'impulso (chebyshev) x cabinet.
-#min errore quadratico medio
-#NB occhio a samplerate!
-
-
 def main():
 
     # prendi file input
     input_file_path, audio_input, samplerate = get_audio_file()
 
     # scelta effetto e parametri di applicazione
-    selected_effect, selected_preset, selected_channel_mode = get_user_choice()
-    if not selected_effect or not selected_preset or not selected_channel_mode:
+    selected_effect, selected_preset, selected_parameters, selected_channel_mode = get_user_choice()
+    if not selected_effect or not selected_preset or not selected_parameters or not selected_channel_mode:
         return
 
     # X TEST!!!
-    # selected_effect = 'reverb'
-    # selected_preset = 'piccola_stanza'
+    # selected_effect = 'cabinet'
+    # selected_preset = 'g12t75_4x12'
+    # selected_channel_mode = 'both'
 
     # prendi i parametri scelti e costruisci l'effetto
-    effect = make_effect(selected_effect, selected_preset)
+    effect = make_effect(selected_effect, selected_parameters)
     if not effect:
         print("Errore nella creazione dell'effetto.")
         return

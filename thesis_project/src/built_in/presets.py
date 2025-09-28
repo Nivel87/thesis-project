@@ -1,5 +1,9 @@
 from typing import Dict
 from thesis_project.src.functions.utility.data_conversion import get_validated_input
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+IR_CABINET_PATH = BASE_DIR / "ir_cabinet"
 
 def get_reverb_params() -> Dict[str, float]:
     """
@@ -19,7 +23,8 @@ def get_reverb_params() -> Dict[str, float]:
     num_reflections = get_validated_input(
         "Inserisci il numero di riflessioni: ",
         lambda x: x >= 0,
-        "Il numero di riflessioni deve essere un valore positivo."
+        "Il numero di riflessioni deve essere un valore positivo.",
+        expected_type=int
     )
 
     decay_rate = get_validated_input(
@@ -60,6 +65,40 @@ def get_delay_params() -> Dict[str, float]:
 
     return {"delay_time": delay_time, "feedback": feedback, "mix": mix}
 
+
+def get_cabinet_params() -> Dict[str, str | float]:
+    """
+        Costruisce un preset custom per il cabinet, a partire dai dati inseriti dall'utente.
+
+        Parametri in output:
+        - {"ir_path": ir_path, "mix": mix} : dizionario che rappresenta il preset
+    """
+    ir_files = [p.name for p in IR_CABINET_PATH.glob('*.wav') if p.is_file()]
+    if not ir_files:
+        print(f"ERRORE: Nessun file IR trovato nella cartella: {IR_CABINET_PATH}")
+        raise FileNotFoundError("Nessun file IR disponibile per il cabinet custom.")
+
+    print("\nInserisci i parametri per la simulazione Cabinet personalizzata:")
+    print("\nFile IR disponibili nella cartella 'ir_cabinet':")
+    for i, name in enumerate(ir_files):
+        print(f"{i + 1}. {name}")
+
+    selected_index = get_validated_input(
+        f"Seleziona il numero del file IR: ",
+        lambda x: 1 <= x <= len(ir_files),
+        f"Selezione non valida. Inserisci un numero tra 1 e {len(ir_files)}."
+    )
+    ir_name = ir_files[int(selected_index) - 1]
+
+    mix = get_validated_input(
+        "Inserisci il mix dry/wet (valore tra 0.0 e 1.0): ",
+        lambda x: 0.0 <= x <= 1.0,
+        "Valore non valido. Il mix deve essere tra 0.0 e 1.0."
+    )
+
+    return {"ir_name": ir_name, "mix": mix}
+
+
 # La mappa principale che registra tutti gli effetti
 EFFECT_REGISTRY = {
     "reverb": {
@@ -78,9 +117,16 @@ EFFECT_REGISTRY = {
         },
         "name": "Ritardo",
         "get_custom_parameters_func": get_delay_params
+    },
+    "cabinet": {
+        "presets": {
+            "cenzo_celestion_v30": {"ir_name": "cenzo_celestion_v30.wav", "mix": 1.0},
+            "g12t75_4x12": {"ir_name": "G12T75-4x12.wav", "mix": 1.0},
+            "v30_1x12": {"ir_name": "V30-4x12.wav", "mix": 1.0},
+        },
+        "name": "Cabinet Speaker Simulator",
+        "get_custom_parameters_func": get_cabinet_params
     }
 }
 
-
-# La lista degli effetti disponibili, ottenuta dinamicamente dalla mappa
 AVAILABLE_EFFECTS = list(EFFECT_REGISTRY.keys())
