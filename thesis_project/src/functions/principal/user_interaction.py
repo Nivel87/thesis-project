@@ -45,15 +45,22 @@ def get_input_file_choice(data_path, audio_files) -> Union[Path, None]:
     return selected_file_path
 
 
-def get_effect_choice() -> str:
+def get_effect_choice(is_first_effect: bool) -> Union[str, None]:
     """
         Richiede all'utente di scegliere un effetto (reverb o delay) e restituisce il nome dell'effetto selezionato.
 
         Parametri in output:
         - AVAILABLE_EFFECTS[choice_index - 1] : il nome dell'effetto selezionato.
     """
+    options_count = len(AVAILABLE_EFFECTS)
+
     while True:
         print("\nQuale effetto vuoi applicare?")
+        if is_first_effect:
+            print(f"0. Esci dal Programma")
+        else:
+            print(f"0. Continua con la Catena (non aggiungere altri effetti)")
+
         for i, effect_name in enumerate(AVAILABLE_EFFECTS, 1):
             effect_details = EFFECT_REGISTRY.get(effect_name, {})
             display_name = effect_details.get("name", effect_name.capitalize())
@@ -63,7 +70,14 @@ def get_effect_choice() -> str:
 
         try:
             choice_index = int(choice)
-            if 1 <= choice_index <= len(AVAILABLE_EFFECTS):
+
+            if choice_index == 0:
+                if is_first_effect:
+                    return None
+                else:
+                    return "DONE_CHAIN"
+            # Scelta effetto standard
+            elif 1 <= choice_index <= options_count:
                 return AVAILABLE_EFFECTS[choice_index - 1]
             else:
                 print("Scelta non valida. Riprova.")
@@ -125,7 +139,7 @@ def get_custom_parameters_choice(effect: str) -> dict[str, float]:
     return EFFECT_REGISTRY[effect]["get_custom_parameters_func"]()
 
 
-def get_user_choice() -> tuple[str, str, dict[str, float | str], str] | None:
+def get_user_choice(is_first_effect: bool = True) -> tuple[str, str, dict[str, float | str], str] | None:
     """
         Gestisce il flusso completo della selezione, guidando l'utente prima nella scelta dell'effetto, poi del preset.
 
@@ -133,7 +147,13 @@ def get_user_choice() -> tuple[str, str, dict[str, float | str], str] | None:
         - effect, parameters | preset: nome dell'effetto da applicare, dizionario di parametri (caso custom) | nome preset.
     """
     while True:
-        effect = get_effect_choice()
+        effect = get_effect_choice(is_first_effect)
+
+        if effect is None:
+            return None  # Esci dal programma (prima iterazione)
+
+        if effect == "DONE_CHAIN":
+            return None  # Termina la catena (dalla seconda iterazione in poi)
 
         while True:
             try:

@@ -10,10 +10,12 @@ def main():
     input_file_path, audio_input, samplerate = get_audio_file()
 
     # costruisci la catena di effetti
-    effect_chain, effect_display_names = build_chain_effect()
-    if not effect_chain:
-        print("Nessun effetto selezionato. Operazione terminata.")
+    chain_result = build_chain_effect()
+    if chain_result is None:
+        print("Nessuna catena di effetti da elaborare. Uscita.")
         return
+    else:
+        effect_chain, effect_display_names = chain_result
 
     # processa il file audio
     result = process_audio_chain(input_file_path, audio_input, samplerate, effect_chain)

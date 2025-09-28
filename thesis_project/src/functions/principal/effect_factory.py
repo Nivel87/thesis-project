@@ -38,18 +38,25 @@ def build_chain_effect() -> tuple[list[Any], list[Any]] | None:
     effect_chain = []
     effect_display_names = []
 
+    first_iteration = True
+
     while True:
         print("\n--- Configurazione Effetto #{} ---".format(len(effect_chain) + 1))
 
         # scelta effetto e parametri di applicazione
-        result  = get_user_choice()
+        result  = get_user_choice(is_first_effect=first_iteration)
         if result is None:
-            return None
+            # Se effect_chain è vuota, l'utente ha scelto "Esci dal Programma"
+            if not effect_chain:
+                print("Uscita dal programma su richiesta dell'utente.")
+                return None
+            # Se effect_chain NON è vuota, l'utente ha scelto "Continua con la Catena" (dalla seconda iterazione)
+            else:
+                print("Catena di effetti completata.")
+                break  # Esci dal ciclo e restituisci la catena
 
-        # X TEST!!!
-        # selected_effect = 'cabinet'
-        # selected_preset = 'g12t75_4x12'
-        # selected_channel_mode = 'both'
+        # Imposta first_iteration su False dopo il primo passaggio riuscito
+        first_iteration = False
 
         selected_effect, selected_preset, selected_parameters, selected_channel_mode = result
 
@@ -67,10 +74,10 @@ def build_chain_effect() -> tuple[list[Any], list[Any]] | None:
             'preset': selected_preset,
             'channel_mode': selected_channel_mode
         })
-        effect_display_names .append(display_name)
+        effect_display_names.append(display_name)
 
-        user_input = input("Vuoi aggiungere un altro effetto alla catena? (s/n): ").lower().strip()
-        if user_input != 's' and user_input != 'si':
-            break
+        #user_input = input("Vuoi aggiungere un altro effetto alla catena? (s/n): ").lower().strip()
+        #if user_input != 's' and user_input != 'si':
+        #    break
 
     return effect_chain, effect_display_names
