@@ -1,5 +1,9 @@
+from typing import Tuple, List, Dict, Any
+
 from thesis_project.src.built_in.presets import EFFECT_REGISTRY
 from thesis_project.src.effects import *
+from thesis_project.src.functions.principal.user_interaction import get_user_choice
+
 
 def make_effect(selected_effect: str, selected_params: dict) -> AudioEffect | None:
     """
@@ -28,3 +32,45 @@ def make_effect(selected_effect: str, selected_params: dict) -> AudioEffect | No
         return CabinetEffect(**selected_params)
     else:
         raise ValueError(f"Effetto '{selected_effect}' non riconosciuto.")
+
+
+def build_chain_effect() -> tuple[list[Any], list[Any]] | None:
+    effect_chain = []
+    effect_display_names = []
+
+    while True:
+        print("\n--- Configurazione Effetto #{} ---".format(len(effect_chain) + 1))
+
+        # scelta effetto e parametri di applicazione
+        result  = get_user_choice()
+        if result is None:
+            return None
+
+        # X TEST!!!
+        # selected_effect = 'cabinet'
+        # selected_preset = 'g12t75_4x12'
+        # selected_channel_mode = 'both'
+
+        selected_effect, selected_preset, selected_parameters, selected_channel_mode = result
+
+        # Costruisci l'oggetto effetto
+        effect_object = make_effect(selected_effect, selected_parameters)
+        if not effect_object:
+            print("Errore nella creazione dell'effetto.")
+            continue
+
+        display_name = EFFECT_REGISTRY.get(selected_effect, {}).get("name", selected_effect)
+
+        # Aggiungi l'effetto e i suoi parametri alla catena
+        effect_chain.append({
+            'effect': effect_object,
+            'preset': selected_preset,
+            'channel_mode': selected_channel_mode
+        })
+        effect_display_names .append(display_name)
+
+        user_input = input("Vuoi aggiungere un altro effetto alla catena? (s/n): ").lower().strip()
+        if user_input != 's' and user_input != 'si':
+            break
+
+    return effect_chain, effect_display_names

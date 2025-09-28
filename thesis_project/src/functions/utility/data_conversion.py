@@ -17,7 +17,7 @@ def get_validated_input(prompt: str, validator_func: Callable[[Any], bool], erro
     while True:
         user_input = input(prompt)
         if user_input.strip() == '-1' and not allow_negative_one:
-            raise GoBack("Torno al menu precedente.")
+            raise GoBack("Ritorno alla selezione del preset")
 
         try:
             # Converte l'input nel tipo atteso (float o int)

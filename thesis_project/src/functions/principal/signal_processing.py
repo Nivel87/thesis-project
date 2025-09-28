@@ -1,36 +1,5 @@
-from thesis_project.src.effects import *
 from thesis_project.src.functions.principal.user_interaction import get_pan_choice
 from thesis_project.src.functions.utility.file_handler import *
-
-def process_audio_file(input_file_path, audio_input, samplerate, effect: AudioEffect, selected_preset: str, selected_channel_mode: str) -> tuple[np.ndarray, np.ndarray, int] | None:
-    """
-        Applica un effetto audio a un file e restituisce i segnali e il samplerate.
-
-        Parametri in input:
-        - input_file_path: Path del file audio.
-        - audio_input: file audio.
-        - samplerate: samplerate del audio.
-        - effect: l'effetto da applicare.
-        - selected_preset: il nome del preset di parametri con i quali applicare l'effetto.
-
-        Parametri in output:
-        - audio_input, processed_audio, samplerate: segnale di ingresso, segnale processato, frequenza di campionamento
-    """
-    print(f"Applicazione dell'effetto {type(effect).__name__} con il preset '{selected_preset}' e la modalità '{selected_channel_mode}'...")
-    processed_audio = effect.apply_effect(audio_input, samplerate, selected_channel_mode)
-    print("Effetto applicato con successo.")
-
-    #equal power pan con squareroot
-    try:
-        processed_audio = apply_equal_power_pan(processed_audio)
-    except ValueError as e:
-        print(f"Errore di Panning: {e}. Il Panning è stato saltato.")
-
-    #crea output
-    get_output_file(input_file_path, audio_input, effect, selected_preset, selected_channel_mode, processed_audio, samplerate)
-
-    return audio_input, processed_audio, samplerate
-
 
 def apply_equal_power_pan(audio_signal: np.ndarray) -> np.ndarray:
     """
@@ -72,3 +41,37 @@ def apply_equal_power_pan(audio_signal: np.ndarray) -> np.ndarray:
     processed_signal[:, 1] *= gain_r
 
     return processed_signal
+
+
+def process_audio_chain(input_file_path, audio_data, samplerate, effect_chain):
+    """
+    Applica una sequenza di effetti all'audio di input.
+
+    """
+    current_signal = audio_data.copy()
+    original_signal = audio_data
+
+    try:
+        for i, item in enumerate(effect_chain):
+            effect = item['effect']
+            channel_mode = item['channel_mode']
+
+            print(f"Applicando l'effetto #{i + 1}: {type(effect).__name__}...")
+            processed_block = effect.apply_effect(current_signal, samplerate, channel_mode)
+
+            current_signal = processed_block
+    except Exception as e:
+        print(f"Errore durante il processing della catena di effetti: {e}")
+        return None
+
+    # equal power pan con squareroot
+    try:
+        current_signal = apply_equal_power_pan(current_signal)
+    except ValueError as e:
+        print(f"Errore di Panning: {e}. Il Panning è stato saltato.")
+
+    # crea output
+    get_output_file(input_file_path, original_signal, current_signal, samplerate)
+
+    return original_signal, current_signal
+

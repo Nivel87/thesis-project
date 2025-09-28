@@ -2,7 +2,39 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def plot_audio_signals(original_signal: np.ndarray, processed_signal: np.ndarray, effect_name: str,
+def build_plot_title(effect_display_names: list[str]) -> str:
+    """
+    Crea la stringa del titolo gestendo gli indici per gli effetti duplicati.
+    Riceve i nomi descrittivi (es. 'Riverbero', 'Ritardo').
+    """
+
+    total_counts = {}
+    # 1. Pre-calcolo del numero totale di occorrenze di ogni nome (es. 'Riverbero': 2, 'Ritardo': 1)
+    for name in effect_display_names:
+        total_counts[name] = total_counts.get(name, 0) + 1
+
+    current_counts = {}
+    final_names = []
+
+    # 2. Iterazione per costruire la stringa finale con gli indici
+    for name in effect_display_names:
+
+        # Aggiorna il conteggio di occorrenze viste finora per questo nome
+        current_counts[name] = current_counts.get(name, 0) + 1
+
+        # Aggiungi l'indice SOLO se il nome appare più di una volta in totale
+        if total_counts[name] > 1:
+            # Aggiunge l'indice (es. 'Riverbero1', 'Ritardo2')
+            final_names.append(f"{name}{current_counts[name]}")
+        else:
+            # Se non ci sono duplicati, usa solo il nome base (es. 'Ritardo')
+            final_names.append(name)
+
+    chain_name = ' -> '.join(final_names)
+    return f"Segnale Audio con {chain_name}"
+
+
+def plot_audio_signals(original_signal: np.ndarray, processed_signal: np.ndarray, effect_name: list[str],
                        stereo_plot_style: str = 'separate'):
     """
         Visualizza il segnale originale e quello processato, gestendo sia audio mono che stereo

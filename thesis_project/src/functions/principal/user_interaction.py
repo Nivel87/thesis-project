@@ -93,7 +93,7 @@ def get_preset_choice(effect: str) -> str:
         choice = input(f"Inserisci il numero del preset: ")
 
         if choice == '0':
-            raise GoBack("Torno al menu precedente")
+            raise GoBack("Torno al menu di selezione dell'effetto")
 
         if choice.lower() == "custom":
             return "custom"
@@ -146,12 +146,23 @@ def get_user_choice() -> tuple[str, str, dict[str, float | str], str] | None:
 
                 channel_mode = get_channel_mode_choice()
                 return effect, preset, parameters, channel_mode
-            except GoBack:
-                print("Torno alla selezione del preset.")
-                continue
+            except GoBack as e:
+                error_message = str(e)
 
-        print("Tornato alla selezione dell'effetto.")
-        break
+                # CASO 1: Ritorno dalla selezione PRESET (Opzione 0)
+                if "Torno al menu di selezione dell'effetto" in error_message:
+                    print("Tornato alla selezione dell'effetto.")
+                    break
+
+                # CASO 2: Ritorno dai CUSTOM PARAMETERS (-1) o da CHANNEL MODE (0)
+                elif "Ritorno alla selezione del preset" in error_message:
+                    print("Tornato alla selezione del preset.")
+                    continue
+
+                else:
+                    # Gestione di GoBack non previsto (Fallback) - DEVE ESSERE QUASI IMPOSSIBILE DA RAGGIUNGERE ORA
+                    print(f"Eccezione di ritorno non gestita: {error_message}. Torno all'effetto.")
+                    break
 
 
 def get_playback_choice(mode: str) -> str:
@@ -215,7 +226,7 @@ def get_channel_mode_choice() -> str:
     while True:
         choice = input("Inserisci il numero della tua scelta: ")
         if choice == '0':
-            raise GoBack("Torno al menu di selezione del preset.")
+            raise GoBack("Ritorno alla selezione del preset")
         elif choice == '1':
             return 'both'
         elif choice == '2':
@@ -243,7 +254,7 @@ def get_pan_choice() -> float:
     return pan
 
 
-def get_plot_choice(original_signal: np.ndarray, processed_signal: np.ndarray, effect_name: str):
+def get_plot_choice(original_signal: np.ndarray, processed_signal: np.ndarray, effect_display_names: list[str]):
     """
         Chiede all'utente quale stile di visualizzazione preferisce per i segnali audio stereo.
 
@@ -255,7 +266,7 @@ def get_plot_choice(original_signal: np.ndarray, processed_signal: np.ndarray, e
     is_stereo = original_signal.ndim == 2 and original_signal.shape[1] == 2
 
     if not is_stereo:
-        plot_audio_signals(original_signal, processed_signal, effect_name)
+        plot_audio_signals(original_signal, processed_signal, effect_display_names)
         return
 
     print("\nScegli lo stile di visualizzazione:")
@@ -265,9 +276,9 @@ def get_plot_choice(original_signal: np.ndarray, processed_signal: np.ndarray, e
     choice = input("Inserisci il numero della tua scelta: ")
 
     if choice == '1':
-        plot_audio_signals(original_signal, processed_signal, effect_name, stereo_plot_style='separate')
+        plot_audio_signals(original_signal, processed_signal, effect_display_names, stereo_plot_style='separate')
     elif choice == '2':
-        plot_audio_signals(original_signal, processed_signal, effect_name, stereo_plot_style='overlay')
+        plot_audio_signals(original_signal, processed_signal, effect_display_names, stereo_plot_style='overlay')
     else:
         print("Scelta non valida. Verrà utilizzata la visualizzazione predefinita (grafici separati).")
-        plot_audio_signals(original_signal, processed_signal, effect_name, stereo_plot_style='separate')
+        plot_audio_signals(original_signal, processed_signal, effect_display_names, stereo_plot_style='separate')
