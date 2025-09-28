@@ -6,8 +6,6 @@ from thesis_project.src.functions.utility.file_handler import get_audio_file
 
 #equal power panning con squareroot (0-1), converto in %
 
-#ping pong delay
-
 def main():
 
     # prendi file input

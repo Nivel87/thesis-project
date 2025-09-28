@@ -4,7 +4,7 @@ from thesis_project.src.effects.audio_effect import AudioEffect
 
 
 class ReverbEffect(AudioEffect):
-    def __init__(self, t60: float, num_reflections: int, decay_rate: float):
+    def __init__(self, t60: float, num_reflections: int, decay_rate: float, mix: float):
         """
             Inizializza l'effetto di riverbero.
 
@@ -12,11 +12,13 @@ class ReverbEffect(AudioEffect):
             - t60: Tempo di riduzione del livello di pressione sonora a -60 dB
             - num_reflections: densità delle prime riflessioni
             - decay_rate: decadimento exp
+            - mix: Miscela dry/wet.
         """
 
         self.t60 = t60
         self.num_reflections = num_reflections
         self.decay_rate = decay_rate
+        self.mix = np.clip(mix, 0.0, 1.0)
 
 
     def create_reverb_ir(self, samplerate: int) -> np.ndarray:
@@ -41,7 +43,6 @@ class ReverbEffect(AudioEffect):
             attenuation = np.exp(-delay / (samplerate * self.t60) * self.decay_rate)
             ir[delay] += attenuation * (np.random.rand() * 2 - 1)
 
-        # Normalizzazione
         if np.max(np.abs(ir)) > 0:
             ir /= np.max(np.abs(ir))
 
@@ -61,11 +62,14 @@ class ReverbEffect(AudioEffect):
             - processed_signal: Il segnale audio con il riverbero applicato.
         """
         ir = self.create_reverb_ir(samplerate)
+        original_signal = audio_signal.copy()
 
         if audio_signal.ndim == 1:
-            processed_signal = fftconvolve(audio_signal, ir, mode='full')
+            processed_signal = fftconvolve(audio_signal, ir, mode='full')[:len(audio_signal)]
+            processed_signal = (1 - self.mix) * original_signal + self.mix * processed_signal
+
         elif audio_signal.ndim == 2:
-            processed_signal = audio_signal.copy()
+            processed_signal = original_signal.copy()
 
             if channel_mode == 'both' or channel_mode == 'left':
                 processed_signal[:, 0] = fftconvolve(audio_signal[:, 0], ir, mode='full')[:len(audio_signal)]

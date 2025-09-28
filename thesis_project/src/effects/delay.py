@@ -48,7 +48,6 @@ class DelayEffect(AudioEffect):
         else:
             raise ValueError("Formato audio non supportato.")
 
-        # Normalizzazione
         max_val = np.max(np.abs(processed_signal))
         if max_val > 0:
             processed_signal /= max_val
@@ -62,11 +61,9 @@ class DelayEffect(AudioEffect):
         delayed_signal = np.zeros(num_samples, dtype=signal.dtype)
         processed_signal = signal.copy()
 
-        # Esegue il calcolo del delay e del feedback per il canale mono
         for i in range(delay_samples, num_samples):
             delayed_signal[i] = processed_signal[i - delay_samples] + self.feedback * delayed_signal[i - delay_samples]
 
-        # Miscela dry/wet
         processed_signal = (1 - self.mix) * signal + self.mix * delayed_signal
         return processed_signal
 
@@ -137,11 +134,9 @@ class PingPongDelayEffect(AudioEffect):  # Non ereditiamo più da DelayEffect
 
             delay_buffer_r[i] = delay_in_r
 
-        # Miscela dry/wet per i canali
         processed_signal[:, 0] = (1 - self.mix) * signal_l + self.mix * delay_buffer_l
         processed_signal[:, 1] = (1 - self.mix) * signal_r + self.mix * delay_buffer_r
 
-        # Normalizzazione
         max_val = np.max(np.abs(processed_signal))
         if max_val > 0:
             processed_signal /= max_val

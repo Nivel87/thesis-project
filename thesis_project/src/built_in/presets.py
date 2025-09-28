@@ -33,7 +33,13 @@ def get_reverb_params() -> Dict[str, float]:
         "Il tempo di decadimento deve essere un valore positivo."
     )
 
-    return {"t60": t60, "num_reflections": num_reflections, "decay_rate": decay_rate}
+    mix = get_validated_input(
+        "Inserisci il mix dry/wet (valore tra 0.0 e 1.0): ",
+        lambda x: 0.0 <= x <= 1.0,
+        "Valore non valido. Il mix deve essere tra 0.0 e 1.0."
+    )
+
+    return {"t60": t60, "num_reflections": num_reflections, "decay_rate": decay_rate, "mix": mix}
 
 
 def get_delay_params() -> Dict[str, float]:
@@ -138,9 +144,9 @@ def get_cabinet_params() -> Dict[str, str | float]:
 EFFECT_REGISTRY = {
     "reverb": {
         "presets": {
-            "piccola_stanza": {"t60": 0.3, "num_reflections": 1500, "decay_rate": 0.5},
-            "sala_concerto": {"t60": 0.8, "num_reflections": 3000, "decay_rate": 0.8},
-            "cattedrale": {"t60": 5.0, "num_reflections": 5000, "decay_rate": 1.0},
+            "piccola_stanza": {"t60": 0.3, "num_reflections": 1500, "decay_rate": 0.5, "mix": 0.3},
+            "sala_concerto": {"t60": 0.8, "num_reflections": 3000, "decay_rate": 0.8, "mix": 0.6},
+            "cattedrale": {"t60": 5.0, "num_reflections": 5000, "decay_rate": 1.0, "mix": 0.8},
         },
         "name": "Riverbero",
         "get_custom_parameters_func": get_reverb_params

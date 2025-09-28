@@ -27,14 +27,12 @@ class CabinetEffect(AudioEffect):
         Carica la Risposta all'Impulso dal percorso specificato.
         """
         try:
-            # Carica l'IR e la sua frequenza di campionamento
             ir_data, sr = sf.read(self.ir_path)
 
             # Converti in mono se l'IR è stereo (un cabinet ha un'unica IR)
             if ir_data.ndim == 2:
                 ir_data = ir_data.mean(axis=1)
 
-            # Normalizza l'IR
             if np.max(np.abs(ir_data)) > 0:
                 ir_data /= np.max(np.abs(ir_data))
 
@@ -62,10 +60,8 @@ class CabinetEffect(AudioEffect):
         if self._ir is None:
             raise RuntimeError("Risposta all'Impulso (IR) non caricata. Chiamare _load_ir() o controllare il percorso.")
 
-        # 1. Gestione del Resampling
         ir_to_use = self._ir.copy()
 
-        # Un controllo rapido sulla frequenza di campionamento
         if samplerate != self._ir_samplerate:
             print(
                 f"Attenzione: Frequenza di campionamento del segnale ({samplerate} Hz) diversa dall'IR ({self._ir_samplerate} Hz). "
@@ -74,41 +70,34 @@ class CabinetEffect(AudioEffect):
             den = self._ir_samplerate
             ir_to_use = resample_poly(ir_to_use, num, den)
 
-        # Assicura che l'audio_signal sia una copia per evitare modifiche indesiderate all'array originale
         original_signal = audio_signal.copy()
         processed_signal = original_signal.copy()
 
-        # Logica di elaborazione mono/stereo
         if audio_signal.ndim == 1:
             processed_effect = self._process_mono(audio_signal, ir_to_use)
             # Taglia il segnale processato alla lunghezza originale (la convoluzione lo allunga)
             processed_effect = processed_effect[:len(audio_signal)]
 
-            # Applicazione del mix dry/wet
             processed_signal = (1 - self.mix) * original_signal + self.mix * processed_effect
 
         elif audio_signal.ndim == 2:
 
-            # Elaborazione canale sinistro
             if channel_mode == 'both' or channel_mode == 'left':
                 processed_left = self._process_mono(audio_signal[:, 0], ir_to_use)
                 processed_left = processed_left[:len(audio_signal)]
                 processed_signal[:, 0] = (1 - self.mix) * original_signal[:, 0] + self.mix * processed_left
 
-            # Elaborazione canale destro
             if channel_mode == 'both' or channel_mode == 'right':
                 processed_right = self._process_mono(audio_signal[:, 1], ir_to_use)
                 processed_right = processed_right[:len(audio_signal)]
                 processed_signal[:, 1] = (1 - self.mix) * original_signal[:, 1] + self.mix * processed_right
 
-            # Gestione errore modalità canale
             elif channel_mode not in ['both', 'left', 'right']:
                 raise ValueError("Modalità canale non valida. Scegli tra 'both', 'left', o 'right'.")
 
         else:
             raise ValueError("Formato audio non supportato. Il segnale deve essere 1D (mono) o 2D (stereo).")
 
-        # Normalizzazione del segnale di uscita
         max_val = np.max(np.abs(processed_signal))
         if max_val > 0:
             processed_signal /= max_val
@@ -120,5 +109,4 @@ class CabinetEffect(AudioEffect):
         """
         Metodo helper statico per l'elaborazione mono tramite convoluzione.
         """
-        # Utilizza la convoluzione veloce (FFT) per l'efficienza
         return fftconvolve(signal, ir, mode='full')
