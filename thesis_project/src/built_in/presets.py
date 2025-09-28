@@ -65,6 +65,41 @@ def get_delay_params() -> Dict[str, float]:
 
     return {"delay_time": delay_time, "feedback": feedback, "mix": mix}
 
+def get_ping_pong_params() -> Dict[str, float]:
+    """
+        Costruisce un preset custom per il ritardo Ping Pong Asimmetrico.
+
+        Parametri in output:
+        - {"delay_time_l": delay_time_l, "delay_time_r": delay_time_r, "feedback": feedback, "mix": mix}
+    """
+    print("\nInserisci i parametri per il Ping Pong Ritardo Asimmetrico personalizzato:")
+
+    delay_time_l = get_validated_input(
+        "Inserisci il tempo di ritardo L->R (s): ",
+        lambda x: x >= 0,
+        "Il tempo di ritardo deve essere un valore positivo."
+    )
+
+    delay_time_r = get_validated_input(
+        "Inserisci il tempo di ritardo R->L (s): ",
+        lambda x: x >= 0,
+        "Il tempo di ritardo deve essere un valore positivo."
+    )
+
+    feedback = get_validated_input(
+        "Inserisci il feedback (valore tra 0.0 e 1.0): ",
+        lambda x: 0.0 <= x <= 1.0,
+        "Valore non valido. Il feedback deve essere tra 0.0 e 1.0."
+    )
+
+    mix = get_validated_input(
+        "Inserisci il mix (valore tra 0.0 e 1.0): ",
+        lambda x: 0.0 <= x <= 1.0,
+        "Valore non valido. Il mix deve essere tra 0.0 e 1.0."
+    )
+
+    return {"delay_time_l": delay_time_l, "delay_time_r": delay_time_r, "feedback": feedback, "mix": mix}
+
 
 def get_cabinet_params() -> Dict[str, str | float]:
     """
@@ -117,6 +152,13 @@ EFFECT_REGISTRY = {
         },
         "name": "Ritardo",
         "get_custom_parameters_func": get_delay_params
+    },
+    "ping_pong": {
+        "presets": {
+            "standard": {"delay_time_l": 0.3, "delay_time_r": 0.2, "feedback": 0.7, "mix": 0.8},
+        },
+        "name": "Ping Pong Delay",
+        "get_custom_parameters_func": get_ping_pong_params
     },
     "cabinet": {
         "presets": {

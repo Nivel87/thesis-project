@@ -22,6 +22,8 @@ def make_effect(selected_effect: str, selected_params: dict) -> AudioEffect | No
         return ReverbEffect(**selected_params)
     elif selected_effect == "delay":
         return DelayEffect(**selected_params)
+    elif selected_effect == "ping_pong":
+        return PingPongDelayEffect(**selected_params)
     elif selected_effect == "cabinet":
         return CabinetEffect(**selected_params)
     else:

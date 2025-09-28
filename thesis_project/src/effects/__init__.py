@@ -1,4 +1,4 @@
 from .audio_effect import AudioEffect
 from .reverb import ReverbEffect
-from .delay import DelayEffect
+from .delay import DelayEffect, PingPongDelayEffect
 from .cabinet import CabinetEffect
