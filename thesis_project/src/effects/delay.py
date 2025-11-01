@@ -68,7 +68,7 @@ class DelayEffect(AudioEffect):
         return processed_signal
 
 
-class PingPongDelayEffect(AudioEffect):  # Non ereditiamo più da DelayEffect
+class PingPongDelayEffect(AudioEffect):
     def __init__(self, delay_time_l: float, delay_time_r: float, feedback: float, mix: float):
         """
             Inizializza l'effetto di Ping Pong Delay Asimmetrico.

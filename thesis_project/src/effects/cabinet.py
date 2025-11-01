@@ -16,7 +16,7 @@ class CabinetEffect(AudioEffect):
         - ir_path: Percorso del file audio (ad es. .wav) contenente la Risposta all'Impulso (IR) del cabinet.
         - mix: Miscela dry/wet. Valore tra 0.0 (solo segnale originale) e 1.0 (solo segnale processato).
         """
-        self.ir_path = IR_CABINET_PATH / ir_name # COSTRUISCE IL PERCORSO COMPLETO
+        self.ir_path = IR_CABINET_PATH / ir_name
         self.mix = np.clip(mix, 0.0, 1.0)  # Assicura che mix sia tra 0 e 1
         self._ir = None  # Variabile per memorizzare l'IR caricata
         self._ir_samplerate = None  # Variabile per memorizzare la frequenza di campionamento dell'IR

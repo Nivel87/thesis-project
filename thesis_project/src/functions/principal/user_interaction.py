@@ -97,12 +97,17 @@ def get_preset_choice(effect: str) -> str:
     """
     presets = list(EFFECT_REGISTRY[effect]["presets"].keys())
 
+    show_custom_option = effect != "cabinet"
+    custom_choice_index = len(presets) + 1
+
+
     while True:
         print(f"\nScegli un preset per il {effect.capitalize()}:")
         print("0. Torna indietro")
         for i, preset_name in enumerate(presets, 1):
             print(f"{i}. {preset_name}")
-        print(f"{len(presets) + 1}. custom")
+        if show_custom_option:
+            print(f"{len(presets) + 1}. custom")
 
         choice = input(f"Inserisci il numero del preset: ")
 
@@ -110,13 +115,18 @@ def get_preset_choice(effect: str) -> str:
             raise GoBack("Torno al menu di selezione dell'effetto")
 
         if choice.lower() == "custom":
-            return "custom"
+            if show_custom_option:
+                return "custom"
+            else:
+                print("Selezione del preset non valida. Riprova.")
+                continue
+
 
         try:
             choice_index = int(choice)
             if 1 <= choice_index <= len(presets):
                 return presets[choice_index - 1]
-            elif choice_index == len(presets) + 1:
+            elif show_custom_option and choice_index == custom_choice_index:
                 return "custom"
             else:
                 raise ValueError

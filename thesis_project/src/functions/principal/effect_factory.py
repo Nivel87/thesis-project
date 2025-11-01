@@ -68,6 +68,16 @@ def build_chain_effect() -> tuple[list[Any], list[Any]] | None:
 
         display_name = EFFECT_REGISTRY.get(selected_effect, {}).get("name", selected_effect)
 
+        if selected_effect == "cabinet":
+            if selected_preset == "custom":
+                # Caso Custom: prendi il nome del file IR dai parametri selezionati
+                ir_name = selected_parameters.get("ir_name", "Nessun IR")
+                # display_name = "Cabinet - [Nome del File IR selezionato]"
+                display_name = f"Cabinet - {ir_name}"
+            else:
+                # Caso Preset Standard: usa il nome del preset
+                display_name = f"Cabinet - {selected_preset}"
+
         # Aggiungi l'effetto e i suoi parametri alla catena
         effect_chain.append({
             'effect': effect_object,
@@ -75,9 +85,5 @@ def build_chain_effect() -> tuple[list[Any], list[Any]] | None:
             'channel_mode': selected_channel_mode
         })
         effect_display_names.append(display_name)
-
-        #user_input = input("Vuoi aggiungere un altro effetto alla catena? (s/n): ").lower().strip()
-        #if user_input != 's' and user_input != 'si':
-        #    break
 
     return effect_chain, effect_display_names
