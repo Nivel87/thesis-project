@@ -41,9 +41,9 @@ def ir_mono_delay_test():
     Genera la risposta impulsiva per il Delay Mono con Feedback.
 
     Parametri standard:
-    - Delay Time: 0.4 secondi (Eco ritmica media)
+    - Delay Time: 0.5 secondi (Eco ritmica media)
     - Feedback: 0.6 (Eco che si spegne gradualmente)
-    - Mix: 0.5 (Dry/Wet bilanciato)
+    - Mix: 0.4 (Dry/Wet bilanciato)
     - Samplerate: frequenza di campionamento
     """
 
@@ -69,57 +69,30 @@ def ir_mono_delay_test():
     # mix = 0.8 (se 1, si sente solo l'eco)
     # samplerate = 44100
 
-    # Numero di ripetizioni desiderato per la visualizzazione.
-    # Scegliamo un numero basato sul feedback: più è alto, più ripetizioni mostriamo.
-    # Un buon compromesso è visualizzare finché l'eco non decade a circa il 10% dell'originale.
-    if feedback > 0.0:
-        # Calcola il numero di ripetizioni fino a quando l'ampiezza è sotto una soglia (es. 0.01)
-        # Ampiezza della n-esima ripetizione = mix * feedback^(n-1)
-        # Cerchiamo n tale che: feedback^(n-1) <= 0.01 / mix
-        # Usando un limite superiore di 20 ripetizioni per evitare durate eccessive con feedback vicini a 1.0
-        soglia = 0.05 / mix  # Soglia un po' più alta per visualizzare la coda
-        if soglia >= 1.0:  # Caso mix molto basso, usiamo 5 ripetizioni
-            num_repetitions = 5
-        else:
-            num_repetitions = int(np.ceil(np.log(soglia) / np.log(feedback))) + 1
-            num_repetitions = min(num_repetitions, 20)  # Limite massimo
-    else:
-        num_repetitions = 2  # Per slapback o delay senza feedback
-
-    # La durata totale in secondi è il tempo di ritardo moltiplicato per il numero di ripetizioni
-    # Aggiungiamo 0.1 secondi di margine per visualizzare meglio
-    duration_sec = delay_time * num_repetitions + 0.1
-    duration_sec = max(duration_sec, 0.5)  # Durata minima di 0.5 secondi
+    duration_sec_plot = 3.0
 
     delay_mono = DelayEffect(delay_time, feedback, mix)
 
-    # Prepara l'input (Impulso Unitario Mono)
-    num_samples = int(duration_sec * samplerate)
-    impulse = np.zeros(num_samples, dtype=np.float32)
-    impulse[0] = 1.0
+    ir_signal_mono = delay_mono.create_delay_ir(samplerate, duration_seconds=duration_sec_plot)
 
-    ir_signal = delay_mono.apply_effect(impulse, samplerate, channel_mode='both')
-
-    ir_signal_mono = ir_signal[:, 0] if ir_signal.ndim == 2 else ir_signal
-
-    print("Generazione IR Delay Mono con Feedback completata.")
-    print(f"Parametri: Tempo={delay_time}s, Feedback={feedback}, Mix={mix}")
-    print(f"Durata calcolata per il grafico: {duration_sec:.2f}s (Ripetizioni: {num_repetitions})")
+    print("Generazione e test IR Delay Mono con Feedback completata.")
+    print(f"Parametri: Tempo={delay_time}s, Feedback={feedback}, Mix={mix}, Samplerate={samplerate}")
+    print(f"Durata visualizzata: {duration_sec_plot:.2f}s")
 
     time_axis = np.arange(len(ir_signal_mono)) / samplerate
 
     plt.figure(figsize=(10, 4))
     plt.stem(time_axis, ir_signal_mono, linefmt='b-', markerfmt='bo', basefmt="r-")
 
-    plt.title(f"Risposta Impulsiva Delay Mono con Feedback (T={delay_time}s, F={feedback}, M={mix})")
+    plt.title(f"Risposta Impulsiva Delay Mono (T={delay_time}s, F={feedback}, M={mix})")
     plt.xlabel("Tempo (s)")
-    plt.xlim(0, duration_sec)
+    plt.xlim(0, duration_sec_plot)
     plt.ylabel("Ampiezza Normalizzata")
     plt.grid(True, linestyle='--')
     plt.tight_layout()
     plt.show()
 
-    print(f"Grafico IR Delay Mono completato. Tempo Ritardo: {delay_time} s.")
+    print(f"Grafico IR Delay Mono completato.")
 
     # plt.savefig('ir_delay_mono.png', dpi=300)
     # plt.close()
@@ -132,7 +105,7 @@ def ir_ping_pong_test():
     Parametri standard:
     - Delay Time L (L->R): 0.3 secondi
     - Delay Time R (R->L): 0.5 secondi (Asimmetrico per effetto "ping-pong")
-    - Feedback: 0.7 (Feedback più alto per un effetto più evidente)
+    - Feedback: 0.75 (Feedback più alto per un effetto più evidente)
     - Mix: 0.8 (Più Wet per focalizzare l'attenzione sul "rimbalzo")
     """
     # Parametri BPM (60 BPM -> 1 Croma = 0.5s)
@@ -145,7 +118,7 @@ def ir_ping_pong_test():
     feedback = 0.75
     mix = 0.8
     samplerate = 44100
-    duration_sec = 4.0
+    duration_sec_plot = 4.0
 
     pp_delay = PingPongDelayEffect(
         delay_time_l=delay_time_l,
@@ -154,17 +127,13 @@ def ir_ping_pong_test():
         mix=mix
     )
 
-    # Prepara l'input (Impulso Unitario Stereo, solo su L)
-    num_samples = int(duration_sec * samplerate)
-    stereo_impulse = np.zeros((num_samples, 2), dtype=np.float32)
-    stereo_impulse[0, 0] = 1.0  # Impulso solo sul canale Sinistro a t=0s
+    ir_signal = pp_delay.create_pingpong_ir(samplerate, duration_seconds=duration_sec_plot)
+    num_samples_plot = len(ir_signal)
 
     print(f"Generazione IR Ping Pong Delay sincronizzato a {BPM} BPM.")
     print(f"Ritardi: T_L={delay_time_l}s, T_R={delay_time_r}s. Feedback={feedback}, Mix={mix}")
 
-    ir_signal = pp_delay.apply_effect(stereo_impulse, samplerate, channel_mode='both')
-
-    time_axis = np.arange(num_samples) / samplerate
+    time_axis = np.arange(num_samples_plot) / samplerate
 
     plt.figure(figsize=(14, 6))
 
@@ -174,7 +143,7 @@ def ir_ping_pong_test():
     plt.title(f"Ping Pong Delay - Canale Sinistro")
     plt.ylabel("Ampiezza L (Normalizzata)")
     plt.grid(True, linestyle='--')
-    plt.xlim(-0.1, duration_sec + 0.1)
+    plt.xlim(-0.1, duration_sec_plot + 0.1)
 
     # Canale Destro (R)
     plt.subplot(2, 1, 2)
@@ -183,7 +152,7 @@ def ir_ping_pong_test():
     plt.xlabel("Tempo (s)")
     plt.ylabel("Ampiezza R (Normalizzata)")
     plt.grid(True, linestyle='--')
-    plt.xlim(-0.1, duration_sec + 0.1)
+    plt.xlim(-0.1, duration_sec_plot + 0.1)
 
     plt.suptitle(f"Risposta Impulsiva Sincronizzata (T_L=T_R=0.5s)", fontsize=16)
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])
@@ -290,13 +259,13 @@ def ir_chain_test():
         print(f"ERRORE nella lettura del file IR Cabinet: {e}")
         return
 
-    # --- 2. Creazione Effetti Successivi ---
-
     # Parametri Delay Mono (secondo effetto)
     delay_time = 0.5
     feedback = 0.6
     delay_mix = 0.4
     delay_mono = DelayEffect(delay_time, feedback, delay_mix)
+    IR_DURATION_SEC=3.0
+    delay_ir = delay_mono.create_delay_ir(SAMPLERATE, IR_DURATION_SEC)
     print(f"Configurato Delay: T={delay_time}s, F={feedback}, M={delay_mix}")
 
     # Parametri Riverbero (terzo effetto)
@@ -308,34 +277,25 @@ def ir_chain_test():
     reverb_ir = reverb.create_reverb_ir(SAMPLERATE)
     print(f"Configurato Riverbero: T60={T60}s, Riflessioni={NUM_REFLECTIONS}, M={reverb_mix}")
 
-    # Prepara l'IR del Delay (impulso unitario come input)
-    # L'IR del Delay deve essere applicato a un impulso unitario.
-    impulse = np.zeros(SAMPLERATE * 3, dtype=np.float32)  # 3 secondi di durata
-    impulse[0] = 1.0
-    delay_ir_signal = delay_mono.apply_effect(impulse, SAMPLERATE, channel_mode='mono')
+    # --- 2. Applicazione in Cascata (Convoluzione) ---
 
-    # Se apply_effect restituisce un segnale stereo (ndim=2), prendi solo il canale mono/sinistro
-    delay_ir_mono = delay_ir_signal[:, 0] if delay_ir_signal.ndim == 2 else delay_ir_signal
-
-    # --- 3. Applicazione in Cascata (Convoluzione) ---
-
-    # 3.1. Applicazione Delay sull'IR del Cabinet
+    # 2.1. Applicazione Delay sull'IR del Cabinet
     # Convoluzione: chain_ir = Cabinet_IR * Delay_IR
-    chain_ir = fftconvolve(chain_ir, delay_ir_mono, mode='full')
+    chain_ir = fftconvolve(chain_ir, delay_ir, mode='full')
     print("Convoluzione Cabinet * Delay completata.")
 
-    # 3.2. Applicazione Riverbero
+    # 2.2. Applicazione Riverbero
     # Convoluzione: chain_ir = (Cabinet_IR * Delay_IR) * Reverb_IR
     chain_ir = fftconvolve(chain_ir, reverb_ir, mode='full')
     print("Convoluzione (Cabinet * Delay) * Reverb completata.")
 
-    # --- 4. Normalizzazione Finale ---
+    # --- 3. Normalizzazione Finale ---
     # Normalizza l'IR della catena per una visualizzazione ottimale
     max_amplitude = np.max(np.abs(chain_ir))
     if max_amplitude > 0:
         chain_ir = chain_ir / max_amplitude
 
-    # --- 5. Generazione del Grafico ---
+    # --- 4. Generazione del Grafico ---
 
     duration_sec = len(chain_ir) / SAMPLERATE
     time_axis = np.arange(len(chain_ir)) / SAMPLERATE
@@ -353,7 +313,7 @@ def ir_chain_test():
     # Limita l'asse X per una migliore visualizzazione
     # La durata totale può essere lunga (Delay * Reverb), la limitiamo a 3 secondi per vedere l'attacco
     # e le prime ripetizioni del delay
-    plot_limit_sec = min(duration_sec, 3.5)
+    plot_limit_sec = min(duration_sec, 4.5)
     plt.xlim(0, plot_limit_sec)
 
     plt.grid(True, linestyle=':', alpha=0.7)
