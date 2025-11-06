@@ -126,9 +126,6 @@ def get_audio_file() -> tuple[Path, np.ndarray, int] | None:
     audio_files = sorted(list(data_path.glob("*.wav")))
     selected_file_path = get_input_file_choice(data_path, audio_files)
 
-    #X TEST!!!
-    # selected_file_path = data_path / 'guitar_solo.wav'
-
     try:
         file_input, samplerate = sf.read(selected_file_path)
     except FileNotFoundError:

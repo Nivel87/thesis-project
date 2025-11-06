@@ -95,58 +95,102 @@ def get_preset_choice(effect: str) -> str:
         Parametri in output:
         - presets[choice_index - 1] oppure "custom" : preset per l'effetto specificato.
     """
-    presets = list(EFFECT_REGISTRY[effect]["presets"].keys())
+    all_presets = list(EFFECT_REGISTRY[effect]["presets"].keys())
 
-    show_custom_option = effect != "cabinet"
-    custom_choice_index = len(presets) + 1
+    display_presets = []
+    for preset_name in all_presets:
+        if preset_name == "custom (Bessel)":
+            display_presets.append("Custom (Bessel)")  # Mantieni la visualizzazione desiderata
+        else:
+            # Sostituisci underscore con spazio e metti in Title Case
+            display_presets.append(preset_name.replace('_', ' ').title())
 
 
     while True:
-        print(f"\nScegli un preset per il {effect.capitalize()}:")
+        print(f"\nScegli un preset per il **{EFFECT_REGISTRY[effect]['name']}**:")
         print("0. Torna indietro")
-        for i, preset_name in enumerate(presets, 1):
+        for i, preset_name in enumerate(display_presets, 1):
             print(f"{i}. {preset_name}")
-        if show_custom_option:
-            print(f"{len(presets) + 1}. custom")
 
         choice = input(f"Inserisci il numero del preset: ")
 
         if choice == '0':
             raise GoBack("Torno al menu di selezione dell'effetto")
 
-        if choice.lower() == "custom":
-            if show_custom_option:
-                return "custom"
-            else:
-                print("Selezione del preset non valida. Riprova.")
-                continue
-
-
         try:
             choice_index = int(choice)
-            if 1 <= choice_index <= len(presets):
-                return presets[choice_index - 1]
-            elif show_custom_option and choice_index == custom_choice_index:
-                return "custom"
+            if 1 <= choice_index <= len(all_presets):
+                # Ritorna il nome del preset originale (es. "custom (Bessel)")
+                return all_presets[choice_index - 1]
             else:
                 raise ValueError
         except ValueError:
             print("Selezione del preset non valida. Riprova.")
 
 
-def get_custom_parameters_choice(effect: str) -> dict[str, float]:
+def get_custom_parameters_choice(effect: str, selected_preset: str) -> dict[str, float]:
     """
         Richiede all'utente di inserire i parametri per l'opzione "custom" a seconda dell'effetto selezionato.
+        Per il Cabinet, se selected_preset è 'custom (Bessel)', chiede i parametri Bessel.
 
         Parametri in input:
         - effect: nome dell'effetto da applicare
+        - selected_preset: il nome del preset selezionato
 
         Parametri in output:
-        - EFFECT_REGISTRY[effect]["get_custom_parameters_func"]() : attraverso la funzione get_custom_parameters_func, si crea il preset
-                                                                    per l'opzione "custom" a seconda dell'effetto
+        - parametri del preset custom (Bessel, Reverb, Delay, ecc.).
     """
     print("\nDigita '-1' in qualsiasi momento per tornare al menu precedente.")
-    return EFFECT_REGISTRY[effect]["get_custom_parameters_func"]()
+
+    # Gestione del caso Cabinet con IR Bessel
+    if effect == "cabinet" and selected_preset == "custom (Bessel)":
+        while True:
+            try:
+                # Chiama la funzione che gestisce l'interazione per i parametri Bessel
+                parameters = EFFECT_REGISTRY[effect]["get_bessel_parameters_func"]()
+                return parameters
+            except GoBack:
+                # L'utente ha scelto '0' o ha inserito '-1' in un sottomenu
+                raise GoBack("Ritorno alla selezione del preset")
+            except Exception as e:
+                # Gestione degli errori generici nell'input
+                error_message = str(e)
+                if "GoBack è stata sollevata dall'input" in error_message or "Nessun file IR disponibile" in error_message:
+                    raise GoBack("Ritorno alla selezione del preset")
+                else:
+                    print(f"Errore imprevisto: {e}. Riprova.")
+                    continue
+
+    # Gestione del caso standard "custom" per Reverb/Delay/Ping-Pong
+    elif selected_preset == "custom":
+        try:
+            return EFFECT_REGISTRY[effect]["get_custom_parameters_func"]()
+        except GoBack:
+            raise GoBack("Ritorno alla selezione del preset")  # Gestisce il '-1' nel sottomenu
+
+    # Se siamo qui, c'è un errore logico nel flusso (dovrebbe essere raggiunto solo da 'custom' o 'custom (Bessel)')
+    raise ValueError(f"Preset '{selected_preset}' non gestito come custom.")
+
+
+def get_cabinet_ir_source_choice() -> str:
+    """
+        Chiede all'utente se vuole usare un file IR o generarne uno con le funzioni di Bessel.
+    """
+    print("\nScegli la sorgente della Risposta all'Impulso (IR):")
+    print("0. Torna indietro")
+    print("1. Carica File IR (.wav)")
+    print("2. Genera IR Sintetica con Funzioni di Bessel")
+
+    while True:
+        choice = input("Inserisci il numero della tua scelta: ")
+        if choice == '0':
+            raise GoBack("Ritorno alla selezione del preset")
+        elif choice == '1':
+            return 'file'
+        elif choice == '2':
+            return 'bessel'
+        else:
+            print("Scelta non valida. Riprova.")
 
 
 def get_user_choice(is_first_effect: bool = True) -> tuple[str, str, dict[str, float | str], str] | None:
@@ -169,8 +213,8 @@ def get_user_choice(is_first_effect: bool = True) -> tuple[str, str, dict[str, f
             try:
                 preset = get_preset_choice(effect)
 
-                if preset == "custom":
-                    parameters = get_custom_parameters_choice(effect)
+                if preset == "custom" or (effect == "cabinet" and preset == "custom (Bessel)"):
+                    parameters = get_custom_parameters_choice(effect, preset)
                 else:
                     parameters = EFFECT_REGISTRY[effect]["presets"][preset]
 
@@ -239,6 +283,7 @@ def get_playback_choice(mode: str) -> str:
             else:
                 print("Scelta non valida. Inserisci un numero tra 1 e 4.")
     return "none"
+
 
 def get_channel_mode_choice() -> str:
     """

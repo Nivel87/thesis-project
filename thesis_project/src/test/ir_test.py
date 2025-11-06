@@ -2,8 +2,9 @@ import numpy as np
 from matplotlib import pyplot as plt
 from scipy.io import wavfile
 from scipy.signal import fftconvolve
+from scipy.special import j1
 
-from thesis_project.src.effects import ReverbEffect, DelayEffect, PingPongDelayEffect
+from thesis_project.src.effects import ReverbEffect, DelayEffect, PingPongDelayEffect, CabinetEffect
 
 
 def ir_reverb_test():
@@ -228,6 +229,88 @@ def ir_cabinet_test():
     # plt.savefig('ir_G12T75-4x12.png', dpi=300)
     # plt.savefig('ir_V30-4x12.png', dpi=300)
     # plt.close()
+
+
+def ir_bessel_test():
+    """
+    Verifica e visualizza le Risposte all'Impulso (IR) sintetiche generate dai modelli di Bessel.
+    Visualizza i grafici in 2x2 con colori specifici e un range di tempo esteso.
+    """
+    SAMPLERATE = 44100
+
+    # --- Modifica qui: Estendi la durata per vedere il decadimento ---
+    IR_DURATION = 0.200  # 200ms (per mostrare meglio il decadimento)
+
+    # Colori specifici per ogni modello
+    colors = ['blue', 'red', 'green', 'magenta']
+
+    # Parametri testati (che producono effetti visibili)
+    bessel_configs = [
+        {'ir_model': 'linear', 'kx': 0.28, 'offset': 0.0, 'alpha': 0.0, 'mix': 1.0},
+        {'ir_model': 'quadratic', 'kx': 1.0, 'offset': 0.0, 'alpha': 0.0, 'mix': 1.0},
+        {'ir_model': 'offset', 'kx': 0.28, 'offset': 1, 'alpha': 0.0, 'mix': 1.0},
+        {'ir_model': 'exp_decay', 'kx': 5.0, 'offset': 0.0, 'alpha': 0.01, 'mix': 1.0},
+    ]
+
+    fig, axes = plt.subplots(2, 2, figsize=(15, 10), sharex=False, sharey=False)  # Rimosso sharex/sharey
+
+    # Rendi gli assi un array piatto per l'iterazione
+    axes = axes.flatten()
+
+    fig.suptitle('Risposte all\'Impulso Sintetiche (Modelli Bessel)', fontsize=16)
+
+    for i, params in enumerate(bessel_configs):
+        model_name = params['ir_model'].capitalize()
+
+        # 1. Istanzia l'effetto Cabinet
+        cabinet = CabinetEffect(ir_source='bessel', **params)
+
+        # 2. Estrai l'IR generata
+        # Per questa visualizzazione, rigeneriamo l'IR con la durata estesa direttamente,
+        # poiché la durata dell'IR in cabinet.py è fissa a 50ms per il processing audio.
+        # Questo è solo a scopo di visualizzazione nel test.
+        ir = CabinetEffect._generate_bessel_ir(SAMPLERATE,
+                                               ir_model=params['ir_model'],
+                                               kx=params['kx'],
+                                               offset=params['offset'],
+                                               alpha=params['alpha'])
+
+        # Se l'IR è più lunga di quanto previsto, la tagliamo per la visualizzazione coerente
+        samples_to_plot = int(SAMPLERATE * IR_DURATION)
+        if len(ir) > samples_to_plot:
+            ir = ir[:samples_to_plot]
+
+        time_axis_samples = np.arange(ir.size)
+        time_axis_seconds = time_axis_samples / SAMPLERATE
+
+        # 3. Disegna sull'asse corrente con il colore specifico
+        axes[i].plot(time_axis_seconds, ir, linewidth=1.0, color=colors[i])
+
+        # --- Aggiornamento del titolo per coerenza con il grafico precedente ---
+        title_str = f"{model_name}: J1({params['kx']}"
+        if model_name == 'Quadratic':
+            title_str += f" * x²)"
+        elif model_name == 'Offset':
+            title_str += f" * (x + {params['offset']}))"
+        elif model_name == 'Exp_decay':
+            title_str += f" * exp(-{params['alpha']} * x))"
+        else:  # Linear
+            title_str += f" * x)"
+
+        axes[i].set_title(title_str)
+        axes[i].set_ylabel("Ampiezza")
+        axes[i].grid(True)
+        axes[i].set_xlim(0, IR_DURATION)  # Imposta l'estensione dell'asse X
+
+    # Imposta l'etichetta X per tutti i grafici (o solo l'ultima riga se preferisci)
+    for ax in axes:  # Etichetta tutti per chiarezza con un layout più ampio
+        ax.set_xlabel("Tempo (secondi)")
+
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    plt.show()
+
+    print(f"Grafico IR Bessel completato.")
+
 
 def ir_chain_test():
     """

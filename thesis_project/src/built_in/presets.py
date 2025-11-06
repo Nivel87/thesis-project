@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Union
 from thesis_project.src.functions.utility.data_conversion import get_validated_input
 from pathlib import Path
 
@@ -71,6 +71,7 @@ def get_delay_params() -> Dict[str, float]:
 
     return {"delay_time": delay_time, "feedback": feedback, "mix": mix}
 
+
 def get_ping_pong_params() -> Dict[str, float]:
     """
         Costruisce un preset custom per il ritardo Ping Pong Asimmetrico.
@@ -110,16 +111,17 @@ def get_ping_pong_params() -> Dict[str, float]:
 def get_cabinet_params() -> Dict[str, str | float]:
     """
         Costruisce un preset custom per il cabinet, a partire dai dati inseriti dall'utente.
+        NOTA: Questa funzione non sarà più accessibile direttamente dal menu dei preset,
+        ma la mantengo per consistenza del registry.
 
         Parametri in output:
         - {"ir_path": ir_path, "mix": mix} : dizionario che rappresenta il preset
     """
     ir_files = [p.name for p in IR_CABINET_PATH.glob('*.wav') if p.is_file()]
     if not ir_files:
-        print(f"ERRORE: Nessun file IR trovato nella cartella: {IR_CABINET_PATH}")
         raise FileNotFoundError("Nessun file IR disponibile per il cabinet custom.")
 
-    print("\nInserisci i parametri per la simulazione Cabinet personalizzata:")
+    print("\nSelezione File IR (Risposta Impulsiva):")
     print("\nFile IR disponibili nella cartella 'ir_cabinet':")
     for i, name in enumerate(ir_files):
         print(f"{i + 1}. {name}")
@@ -127,7 +129,8 @@ def get_cabinet_params() -> Dict[str, str | float]:
     selected_index = get_validated_input(
         f"Seleziona il numero del file IR: ",
         lambda x: 1 <= x <= len(ir_files),
-        f"Selezione non valida. Inserisci un numero tra 1 e {len(ir_files)}."
+        f"Selezione non valida. Inserisci un numero tra 1 e {len(ir_files)}.",
+        expected_type=int
     )
     ir_name = ir_files[int(selected_index) - 1]
 
@@ -137,8 +140,65 @@ def get_cabinet_params() -> Dict[str, str | float]:
         "Valore non valido. Il mix deve essere tra 0.0 e 1.0."
     )
 
-    return {"ir_name": ir_name, "mix": mix}
+    return {"ir_source": "file", "ir_name": ir_name, "mix": mix}
 
+
+def get_bessel_ir_params() -> Dict[str, Union[str, float]]:
+    """
+        Richiede all'utente di selezionare un modello di IR sintetica Bessel e i parametri associati.
+        Questa funzione viene chiamata direttamente quando l'utente sceglie 'custom (Bessel)'
+
+        Parametri in output:
+        - Dict[str, str | float] : dizionario contenente 'ir_model' e i parametri (kx, offset, alpha).
+    """
+    MODELS = ["linear", "quadratic", "offset", "exp_decay"]
+    print("\nSeleziona il modello di Risposta all'Impulso Bessel:")
+    for i, model in enumerate(MODELS, 1):
+        print(f"{i}. {model.capitalize()}")
+
+    selected_index = get_validated_input(
+        f"Seleziona il numero del modello: ",
+        lambda x: 1 <= x <= len(MODELS),
+        f"Selezione non valida. Inserisci un numero tra 1 e {len(MODELS)}.",
+        expected_type=int
+    )
+    ir_model = MODELS[selected_index - 1]
+    params: Dict[str, Union[str, float]] = {"ir_source": "bessel", "ir_model": ir_model}
+
+    print(f"\nInserisci i parametri per il modello '{ir_model.capitalize()}':")
+
+    # Richiesta di kx per tutti i modelli
+    kx = get_validated_input(
+        "Inserisci il valore di kx (es. 0.28 per linear): ",
+        lambda x: x > 0,
+        "Il valore di kx deve essere positivo."
+    )
+    params["kx"] = kx
+
+    # Parametri specifici per modello
+    if ir_model == "offset":
+        offset = get_validated_input(
+            "Inserisci il valore di offset (es. 1.0): ",
+            lambda x: x >= 0,
+            "Il valore di offset deve essere non negativo."
+        )
+        params["offset"] = offset
+    elif ir_model == "exp_decay":
+        alpha = get_validated_input(
+            "Inserisci il valore di decadimento alpha (es. 0.01): ",
+            lambda x: 0.0 <= x <= 1.0,
+            "Il valore di alpha deve essere tra 0.0 e 1.0."
+        )
+        params["alpha"] = alpha
+
+    mix = get_validated_input(
+        "Inserisci il mix dry/wet (valore tra 0.0 e 1.0): ",
+        lambda x: 0.0 <= x <= 1.0,
+        "Valore non valido. Il mix deve essere tra 0.0 e 1.0."
+    )
+    params["mix"] = mix
+
+    return params
 
 # La mappa principale che registra tutti gli effetti
 EFFECT_REGISTRY = {
@@ -168,12 +228,14 @@ EFFECT_REGISTRY = {
     },
     "cabinet": {
         "presets": {
-            "cenzo_celestion_v30": {"ir_name": "cenzo_celestion_v30.wav", "mix": 1.0},
-            "g12t75_4x12": {"ir_name": "G12T75-4x12.wav", "mix": 1.0},
-            "v30_1x12": {"ir_name": "V30-4x12.wav", "mix": 1.0},
+            "cenzo_celestion_v30": {"ir_source": "file", "ir_name": "cenzo_celestion_v30.wav", "mix": 1.0},
+            "g12t75_4x12": {"ir_source": "file", "ir_name": "G12T75-4x12.wav", "mix": 1.0},
+            "v30_1x12": {"ir_source": "file", "ir_name": "V30-4x12.wav", "mix": 1.0},
+            "custom (Bessel)": {"ir_source": "bessel"}
         },
         "name": "Cabinet Speaker Simulator",
-        "get_custom_parameters_func": get_cabinet_params
+        "get_custom_parameters_func": get_cabinet_params,
+        "get_bessel_parameters_func": get_bessel_ir_params
     }
 }
 

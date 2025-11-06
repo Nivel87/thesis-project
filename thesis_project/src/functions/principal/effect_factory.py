@@ -17,7 +17,6 @@ def make_effect(selected_effect: str, selected_params: dict) -> AudioEffect | No
         Parametri in output:
         - AudioEffect | None : l'oggetto AudioEffect costruito con il preset di parametri
     """
-    # print(f"{selected_params}: {selected_params}")
     if not selected_params:
         return None
 
@@ -29,6 +28,7 @@ def make_effect(selected_effect: str, selected_params: dict) -> AudioEffect | No
     elif selected_effect == "ping_pong":
         return PingPongDelayEffect(**selected_params)
     elif selected_effect == "cabinet":
+        # Passa i parametri direttamente, inclusi 'ir_source' e 'ir_name' o 'ir_model'
         return CabinetEffect(**selected_params)
     else:
         raise ValueError(f"Effetto '{selected_effect}' non riconosciuto.")
@@ -69,13 +69,17 @@ def build_chain_effect() -> tuple[list[Any], list[Any]] | None:
         display_name = EFFECT_REGISTRY.get(selected_effect, {}).get("name", selected_effect)
 
         if selected_effect == "cabinet":
-            if selected_preset == "custom":
-                # Caso Custom: prendi il nome del file IR dai parametri selezionati
-                ir_name = selected_parameters.get("ir_name", "Nessun IR")
-                # display_name = "Cabinet - [Nome del File IR selezionato]"
-                display_name = f"Cabinet - {ir_name}"
+            ir_source = selected_parameters.get("ir_source")
+
+            if selected_preset == "custom (Bessel)":
+                # Caso Custom Bessel: usa il modello e il nome del preset
+                ir_model = selected_parameters.get("ir_model", "Sconosciuto")
+                display_name = f"Cabinet - Custom Bessel: {ir_model.capitalize()}"
+            elif ir_source == "file":
+                # Caso Preset Standard (File IR)
+                display_name = f"Cabinet - File Preset: {selected_preset}"
             else:
-                # Caso Preset Standard: usa il nome del preset
+                # Fallback
                 display_name = f"Cabinet - {selected_preset}"
 
         # Aggiungi l'effetto e i suoi parametri alla catena
