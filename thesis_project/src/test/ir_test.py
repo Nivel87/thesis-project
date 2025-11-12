@@ -3,6 +3,7 @@ from matplotlib import pyplot as plt
 from scipy.io import wavfile
 from scipy.signal import fftconvolve
 from scipy.special import j1
+import warnings
 
 from thesis_project.src.effects import ReverbEffect, DelayEffect, PingPongDelayEffect, CabinetEffect
 
@@ -24,7 +25,7 @@ def ir_reverb_test():
 
     plt.plot(time_axis_seconds, ir, linewidth=0.5, label='Risposta all\'Impulso (IR)')
 
-    plt.title(f"Risposta all'Impulso del Riverbero (T60={T60}s, Riflessioni={NUM_REFLECTIONS})")
+    plt.title(f"Risposta all'Impulso del Riverbero (T60={T60}s, Riflessioni={NUM_REFLECTIONS}, Decay Rate={DECAY_RATE}, Mix={MIX})")
     plt.xlabel("Tempo (secondi)")
     plt.ylabel("Ampiezza")
     plt.grid(True)
@@ -155,7 +156,7 @@ def ir_ping_pong_test():
     plt.grid(True, linestyle='--')
     plt.xlim(-0.1, duration_sec_plot + 0.1)
 
-    plt.suptitle(f"Risposta Impulsiva Sincronizzata (T_L=T_R=0.5s)", fontsize=16)
+    plt.suptitle(f"Risposta Impulsiva Sincronizzata (T_L=T_R=0.5s, F=0.75, M=0.8)", fontsize=16)
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     plt.show()
 
@@ -166,69 +167,120 @@ def ir_ping_pong_test():
 
 
 def ir_cabinet_test():
-    file_path = 'C:\\Users\\elede\\PycharmProjects\\PythonProject\\thesis_project\\ir_cabinet\\cenzo_celestion_V30.wav'
-    # file_path = 'C:\\Users\\elede\\PycharmProjects\\PythonProject\\thesis_project\\ir_cabinet\\G12T75-4x12.wav'
-    # file_path = 'C:\\Users\\elede\\PycharmProjects\\PythonProject\\thesis_project\\ir_cabinet\\V30-4x12.wav'
+    # --- 1. Definizione dei percorsi e delle etichette ---
+    ir_files = [
+        {
+            'path': 'C:\\Users\\elede\\PycharmProjects\\PythonProject\\thesis_project\\ir_cabinet\\cenzo_celestion_V30.wav',
+            'label': 'Cenzo V30',
+            'color_L': '#0077b6',  # Blu
+            'color_R': '#74a8d4'  # Blu chiaro
+        },
+        {
+            'path': 'C:\\Users\\elede\\PycharmProjects\\PythonProject\\thesis_project\\ir_cabinet\\G12T75-4x12.wav',
+            'label': 'G12T75 4x12',
+            'color_L': '#d90429',  # Rosso
+            'color_R': '#e87e91'  # Rosso chiaro
+        },
+        {
+            'path': 'C:\\Users\\elede\\PycharmProjects\\PythonProject\\thesis_project\\ir_cabinet\\V30-4x12.wav',
+            'label': 'V30 4x12',
+            'color_L': '#2a9d8f',  # Verde/Acqua
+            'color_R': '#70c9c0'  # Verde/Acqua chiaro
+        }
+    ]
 
     ZOOM_TIME_SECONDS = 0.03
 
-    try:
-        rate, data = wavfile.read(file_path)
-    except FileNotFoundError:
-        print(f"ERRORE: File non trovato al percorso: {file_path}")
-        exit()
-    except Exception as e:
-        print(f"Si è verificato un errore durante la lettura del file: {e}")
-        exit()
+    # 🤫 Ignora l'avviso di SciPy
+    warnings.filterwarnings("ignore", category=wavfile.WavFileWarning)
 
-    is_stereo = data.ndim > 1
-    num_channels = data.ndim if is_stereo else 1
-    print(f"File letto. Canali: {num_channels}. Zoom impostato a {ZOOM_TIME_SECONDS}s.")
+    # --- 2. Determinazione del Numero Totale di Subplots ---
+    num_total_plots = 0
+    # Controlliamo il numero di canali per calcolare quante righe servono
+    for ir in ir_files:
+        try:
+            # Legge solo per sapere la dimensionalità, senza preoccuparsi degli avvisi
+            rate, data = wavfile.read(ir['path'])
+            ir['num_channels'] = data.ndim if data.ndim > 1 else 1
+            num_total_plots += ir['num_channels']
+        except Exception:
+            ir['num_channels'] = 0  # Salta i file non trovati/letti
 
-    samples_to_plot = data[:, 0] if is_stereo else data
+    if num_total_plots == 0:
+        print("Nessun file IR valido trovato o letto.")
+        return
 
-    num_samples = len(samples_to_plot)
-    duration = num_samples / rate
-    time = np.linspace(0., duration, num_samples)
+    # --- 3. Creazione della Figura e dei Subplots ---
+    fig, axes = plt.subplots(
+        nrows=num_total_plots,
+        ncols=1,
+        figsize=(15, 3.5 * num_total_plots),  # Dimensione verticale scalata
+        sharex=True
+    )
+    # Rende 'axes' un array per l'indicizzazione, anche se c'è un solo plot
+    axes = np.ravel(axes)
 
-    plt.figure(figsize=(15, 6))
+    plot_index = 0
 
-    if is_stereo:
-        # --- Trattazione STEREO ---
-        channel_L = data[:, 0]
-        channel_R = data[:, 1]
+    # --- 4. Loop per Caricare e Plottare Ogni File ---
+    print("Inizio il caricamento e il plot delle Risposte Impulsive (IR) su grafici separati...")
 
-        # Plotta il Canale Sinistro (L)
-        plt.plot(time, channel_L, color='#0077b6', linewidth=1, label='Canale Sinistro (Mic 1)')
+    for ir in ir_files:
+        if ir['num_channels'] == 0:
+            continue
 
-        # Plotta il Canale Destro (R)
-        plt.plot(time, channel_R, color='#d90429', linewidth=1, label='Canale Destro (Mic 2)', alpha=0.7)
+        rate, data = wavfile.read(ir['path'])
+        label = ir['label']
 
-        plt.title('Risposta Impulsiva del Cabinet')
+        # Calcola il vettore tempo per questa IR (lunghezza specifica)
+        num_samples = len(data) if ir['num_channels'] == 1 else len(data[:, 0])
+        duration = num_samples / rate
+        time_ir = np.linspace(0., duration, num_samples)
 
-    else:
-        plt.plot(time, data, color='#ef7600', linewidth=1, label='Canale Mono')
+        # Limita l'indice dei dati per lo zoom
+        max_idx = int(rate * ZOOM_TIME_SECONDS)
+        plot_idx = min(num_samples, max_idx)
 
-        max_amplitude_index = np.argmax(np.abs(data))
-        max_amplitude_time = time[max_amplitude_index]
-        plt.axvline(max_amplitude_time, color='k', linestyle='--', linewidth=1, label='Picco Impulso')
+        if ir['num_channels'] == 1:
+            # --- Caso MONO ---
+            ax = axes[plot_index]
+            ax.plot(time_ir[:plot_idx], data[:plot_idx], color=ir['color_L'], linewidth=1)
+            ax.set_title(f'IR: {label} (Mono)')
+            ax.set_ylabel('Ampiezza')
+            ax.grid(True, linestyle=':', alpha=0.6)
+            plot_index += 1
 
-        plt.title('Risposta Impulsiva del Cabinet')
+        elif ir['num_channels'] >= 2:
+            # --- Caso STEREO (o multi-canale) ---
 
-    plt.xlabel('Tempo [s]')
-    plt.ylabel('Ampiezza')
-    plt.grid(True, linestyle=':', alpha=0.6)
-    plt.xlim(0, ZOOM_TIME_SECONDS)
-    plt.legend()
-    plt.tight_layout()
+            # Canale Sinistro (L)
+            ax_L = axes[plot_index]
+            ax_L.plot(time_ir[:plot_idx], data[:plot_idx, 0], color=ir['color_L'], linewidth=1)
+            ax_L.set_title(f'IR: {label} - Canale Sinistro (L)')
+            ax_L.set_ylabel('Ampiezza')
+            ax_L.grid(True, linestyle=':', alpha=0.6)
+            plot_index += 1
+
+            # Canale Destro (R)
+            ax_R = axes[plot_index]
+            ax_R.plot(time_ir[:plot_idx], data[:plot_idx, 1], color=ir['color_R'], linewidth=1)
+            ax_R.set_title(f'IR: {label} - Canale Destro (R)')
+            ax_R.set_ylabel('Ampiezza')
+            ax_R.grid(True, linestyle=':', alpha=0.6)
+            plot_index += 1
+
+        print(f"'{label}' plottato su {ir['num_channels']} grafico(i) separato(i).")
+
+    # --- 5. Impostazioni Finali del Grafico ---
+    # Imposta l'etichetta X solo sull'ultimo subplot
+    axes[-1].set_xlabel('Tempo [s]')
+
+    # Imposta lo zoom temporale fisso per tutti i subplots (grazie a sharex=True)
+    axes[0].set_xlim(0, ZOOM_TIME_SECONDS)
+
+    fig.suptitle('Risposte Impulsive (IR) Cabinet - Confronto Separato', fontsize=16)
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     plt.show()
-
-    print(f"\nVisualizzazione completata per il segnale {'STEREO' if is_stereo else 'MONO'}.")
-
-    # plt.savefig('ir_cenzo_celestion_V30.png', dpi=300)
-    # plt.savefig('ir_G12T75-4x12.png', dpi=300)
-    # plt.savefig('ir_V30-4x12.png', dpi=300)
-    # plt.close()
 
 
 def ir_bessel_test():

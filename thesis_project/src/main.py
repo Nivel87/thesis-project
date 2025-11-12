@@ -2,7 +2,8 @@ from thesis_project.src.functions.principal.effect_factory import build_chain_ef
 from thesis_project.src.functions.principal.signal_processing import process_audio_chain
 from thesis_project.src.functions.principal.user_interaction import get_plot_choice
 from thesis_project.src.functions.utility.file_handler import get_audio_file
-from thesis_project.src.test.ir_test import ir_bessel_test
+from thesis_project.src.test.in_test import in_test
+from thesis_project.src.test.ir_test import ir_reverb_test, ir_mono_delay_test, ir_ping_pong_test, ir_cabinet_test
 
 
 def main():
@@ -30,6 +31,7 @@ def main():
 if __name__ == "__main__":
     main()
 
+    # in_test()
     # ir_reverb_test()
     # ir_mono_delay_test()
     # ir_ping_pong_test()

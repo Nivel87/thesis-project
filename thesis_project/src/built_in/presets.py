@@ -111,7 +111,7 @@ def get_ping_pong_params() -> Dict[str, float]:
 def get_cabinet_params() -> Dict[str, str | float]:
     """
         Costruisce un preset custom per il cabinet, a partire dai dati inseriti dall'utente.
-        NOTA: Questa funzione non sarà più accessibile direttamente dal menu dei preset,
+        NOTA: Questa funzione non sarà piu' accessibile direttamente dal menu dei preset,
         ma la mantengo per consistenza del registry.
 
         Parametri in output:
@@ -207,6 +207,7 @@ EFFECT_REGISTRY = {
             "piccola_stanza": {"t60": 0.3, "num_reflections": 1500, "decay_rate": 0.5, "mix": 0.3},
             "sala_concerto": {"t60": 0.8, "num_reflections": 3000, "decay_rate": 0.8, "mix": 0.6},
             "cattedrale": {"t60": 5.0, "num_reflections": 5000, "decay_rate": 1.0, "mix": 0.8},
+            "custom": {}
         },
         "name": "Riverbero",
         "get_custom_parameters_func": get_reverb_params
@@ -215,6 +216,7 @@ EFFECT_REGISTRY = {
         "presets": {
             "slapback": {"delay_time": 0.1, "feedback": 0.3, "mix": 0.4},
             "long_delay": {"delay_time": 1.5, "feedback": 0.7, "mix": 0.7},
+            "custom": {}
         },
         "name": "Ritardo",
         "get_custom_parameters_func": get_delay_params
@@ -222,6 +224,7 @@ EFFECT_REGISTRY = {
     "ping_pong": {
         "presets": {
             "standard": {"delay_time_l": 0.3, "delay_time_r": 0.2, "feedback": 0.7, "mix": 0.8},
+            "custom": {}
         },
         "name": "Ping Pong Delay",
         "get_custom_parameters_func": get_ping_pong_params
