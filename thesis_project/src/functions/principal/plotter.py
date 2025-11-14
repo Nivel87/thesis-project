@@ -34,8 +34,8 @@ def build_plot_title(effect_display_names: list[str]) -> str:
     return f"Segnale Audio con {chain_name}"
 
 
-def plot_audio_signals(original_signal: np.ndarray, processed_signal: np.ndarray, effect_name: list[str],
-                       stereo_plot_style: str = 'separate'):
+def plot_audio_signals(original_signal: np.ndarray, processed_signal: np.ndarray, sampling_rate: int,
+                       effect_name: list[str], stereo_plot_style: str = 'separate'):
     """
         Visualizza il segnale originale e quello processato, gestendo sia audio mono che stereo
         e permettendo di scegliere lo stile di visualizzazione per i segnali stereo.
@@ -48,8 +48,16 @@ def plot_audio_signals(original_signal: np.ndarray, processed_signal: np.ndarray
                              'overlay' per sovrapporre i canali sullo stesso grafico.
                              Ignorato per segnali mono.
     """
+    # 1. Calcola il vettore del tempo in secondi
+    num_samples = len(original_signal)
+    time = np.linspace(0, num_samples / sampling_rate, num_samples, endpoint=False)
+
     # Verifica se i segnali sono stereo
     is_stereo = original_signal.ndim == 2 and original_signal.shape[1] == 2
+
+    # Definisce le etichette per gli assi
+    x_label = 'Tempo (s)'
+    y_label = 'Ampiezza'
 
     if is_stereo and stereo_plot_style == 'separate':
         # Opzione 1: Grafici separati per canale
@@ -58,33 +66,33 @@ def plot_audio_signals(original_signal: np.ndarray, processed_signal: np.ndarray
         # Canale sinistro originale
         plt.subplot(2, 2, 1)
         plt.title('Segnale Originale - Canale Sinistro')
-        plt.plot(original_signal[:, 0])
-        plt.xlabel('Campioni')
-        plt.ylabel('Ampiezza')
+        plt.plot(time, original_signal[:, 0])
+        plt.xlabel(x_label)
+        plt.ylabel(y_label)
         plt.grid(True)
 
         # Canale destro originale
         plt.subplot(2, 2, 2)
         plt.title('Segnale Originale - Canale Destro')
-        plt.plot(original_signal[:, 1])
-        plt.xlabel('Campioni')
-        plt.ylabel('Ampiezza')
+        plt.plot(time, original_signal[:, 1])
+        plt.xlabel(x_label)
+        plt.ylabel(y_label)
         plt.grid(True)
 
         # Canale sinistro processato
         plt.subplot(2, 2, 3)
         plt.title(f'Segnale {effect_name} - Canale Sinistro')
-        plt.plot(processed_signal[:, 0])
-        plt.xlabel('Campioni')
-        plt.ylabel('Ampiezza')
+        plt.plot(time, processed_signal[:, 0])
+        plt.xlabel(x_label)
+        plt.ylabel(y_label)
         plt.grid(True)
 
         # Canale destro processato
         plt.subplot(2, 2, 4)
         plt.title(f'Segnale {effect_name} - Canale Destro')
-        plt.plot(processed_signal[:, 1])
-        plt.xlabel('Campioni')
-        plt.ylabel('Ampiezza')
+        plt.plot(time, processed_signal[:, 1])
+        plt.xlabel(x_label)
+        plt.ylabel(y_label)
         plt.grid(True)
 
     else:  # include segnali mono e l'opzione 'overlay' per stereo
@@ -96,14 +104,14 @@ def plot_audio_signals(original_signal: np.ndarray, processed_signal: np.ndarray
         plt.title('Segnale Audio Originale')
 
         if is_stereo:
-            plt.plot(original_signal[:, 0], label='Canale Sinistro')
-            plt.plot(original_signal[:, 1], label='Canale Destro')
+            plt.plot(time,original_signal[:, 0], label='Canale Sinistro')
+            plt.plot(time,original_signal[:, 1], label='Canale Destro')
             plt.legend()
         else:
-            plt.plot(original_signal)
+            plt.plot(time,original_signal)
 
-        plt.xlabel('Campioni')
-        plt.ylabel('Ampiezza')
+        plt.xlabel(x_label)
+        plt.ylabel(y_label)
         plt.grid(True)
 
         # Grafico del segnale processato
@@ -111,14 +119,14 @@ def plot_audio_signals(original_signal: np.ndarray, processed_signal: np.ndarray
         plt.title(f'Segnale Audio con {effect_name}')
 
         if is_stereo:
-            plt.plot(processed_signal[:, 0], label='Canale Sinistro')
-            plt.plot(processed_signal[:, 1], label='Canale Destro')
+            plt.plot(time,processed_signal[:, 0], label='Canale Sinistro')
+            plt.plot(time, processed_signal[:, 1], label='Canale Destro')
             plt.legend()
         else:
-            plt.plot(processed_signal)
+            plt.plot(time, processed_signal)
 
-        plt.xlabel('Campioni')
-        plt.ylabel('Ampiezza')
+        plt.xlabel(x_label)
+        plt.ylabel(y_label)
         plt.grid(True)
 
     plt.tight_layout()

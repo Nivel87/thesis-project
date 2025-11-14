@@ -3,7 +3,8 @@ from thesis_project.src.functions.principal.signal_processing import process_aud
 from thesis_project.src.functions.principal.user_interaction import get_plot_choice
 from thesis_project.src.functions.utility.file_handler import get_audio_file
 from thesis_project.src.test.in_test import in_test
-from thesis_project.src.test.ir_test import ir_reverb_test, ir_mono_delay_test, ir_ping_pong_test, ir_cabinet_test
+from thesis_project.src.test.ir_test import ir_reverb_test, ir_mono_delay_test, ir_ping_pong_test, ir_cabinet_test, \
+    ir_chain_test, ir_bessel_test
 
 
 def main():
@@ -26,7 +27,7 @@ def main():
 
     # produci il grafico dei segnali in/out e confrontali
     original_signal, processed_signal = result
-    get_plot_choice(original_signal, processed_signal, effect_display_names)
+    get_plot_choice(original_signal, processed_signal, samplerate, effect_display_names)
 
 if __name__ == "__main__":
     main()

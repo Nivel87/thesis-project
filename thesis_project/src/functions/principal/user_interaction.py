@@ -329,19 +329,20 @@ def get_pan_choice() -> float:
     return pan
 
 
-def get_plot_choice(original_signal: np.ndarray, processed_signal: np.ndarray, effect_display_names: list[str]):
+def get_plot_choice(original_signal: np.ndarray, processed_signal: np.ndarray, samplerate: int, effect_display_names: list[str]):
     """
         Chiede all'utente quale stile di visualizzazione preferisce per i segnali audio stereo.
 
         Parametri in input:
         - original_signal: Il segnale audio originale.
         - processed_signal: Il segnale audio processato.
+        - samplerate: La frequenza di campionamento.
         - effect_name: Il nome dell'effetto applicato.
     """
     is_stereo = original_signal.ndim == 2 and original_signal.shape[1] == 2
 
     if not is_stereo:
-        plot_audio_signals(original_signal, processed_signal, effect_display_names)
+        plot_audio_signals(original_signal, processed_signal, samplerate, effect_display_names)
         return
 
     print("\nScegli lo stile di visualizzazione:")
@@ -351,9 +352,9 @@ def get_plot_choice(original_signal: np.ndarray, processed_signal: np.ndarray, e
     choice = input("Inserisci il numero della tua scelta: ")
 
     if choice == '1':
-        plot_audio_signals(original_signal, processed_signal, effect_display_names, stereo_plot_style='separate')
+        plot_audio_signals(original_signal, processed_signal,  samplerate, effect_display_names, stereo_plot_style='separate')
     elif choice == '2':
-        plot_audio_signals(original_signal, processed_signal, effect_display_names, stereo_plot_style='overlay')
+        plot_audio_signals(original_signal, processed_signal,  samplerate, effect_display_names, stereo_plot_style='overlay')
     else:
         print("Scelta non valida. Verrà utilizzata la visualizzazione predefinita (grafici separati).")
-        plot_audio_signals(original_signal, processed_signal, effect_display_names, stereo_plot_style='separate')
+        plot_audio_signals(original_signal, processed_signal,  samplerate, effect_display_names, stereo_plot_style='separate')

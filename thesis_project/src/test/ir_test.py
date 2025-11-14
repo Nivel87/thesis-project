@@ -285,80 +285,63 @@ def ir_cabinet_test():
 
 def ir_bessel_test():
     """
-    Verifica e visualizza le Risposte all'Impulso (IR) sintetiche generate dai modelli di Bessel.
-    Visualizza i grafici in 2x2 con colori specifici e un range di tempo esteso.
+    Calcola e plotta tre Impulse Response (IR) simulate usando
+    la funzione di Bessel del 1° ordine (J1) con diversi parametri,
+    simulando diverse posizioni di microfonazione di un cabinet.
     """
-    SAMPLERATE = 44100
+    """
+        Calcola e plotta tre Impulse Response (IR) simulate usando
+        la funzione di Bessel del 1° ordine (J1) su grafici separati e compatti.
+        Ogni grafico avrà il proprio asse X basato sulla durata dell'IR.
+        """
+    Fs = 44100  # Frequenza di campionamento in Hz
+    res = 1  # Risoluzione (passo di campionamento)
 
-    # --- Modifica qui: Estendi la durata per vedere il decadimento ---
-    IR_DURATION = 0.200  # 200ms (per mostrare meglio il decadimento)
-
-    # Colori specifici per ogni modello
-    colors = ['blue', 'red', 'green', 'magenta']
-
-    # Parametri testati (che producono effetti visibili)
-    bessel_configs = [
-        {'ir_model': 'linear', 'kx': 0.28, 'offset': 0.0, 'alpha': 0.0, 'mix': 1.0},
-        {'ir_model': 'quadratic', 'kx': 1.0, 'offset': 0.0, 'alpha': 0.0, 'mix': 1.0},
-        {'ir_model': 'offset', 'kx': 0.28, 'offset': 1, 'alpha': 0.0, 'mix': 1.0},
-        {'ir_model': 'exp_decay', 'kx': 5.0, 'offset': 0.0, 'alpha': 0.01, 'mix': 1.0},
+    # --- 1. Combinazioni di Timbri ---
+    combinations = [
+        {'label': "1. Bright & Tight (kx=0.50, 3ms)", 'kx': 0.50, 'duration': 0.003, 'color': 'red'},
+        {'label': "2. Warm & Punchy (kx=0.28, 5ms)", 'kx': 0.28, 'duration': 0.005, 'color': 'blue'},
+        {'label': "3. Fat & Dark (kx=0.15, 8ms)", 'kx': 0.15, 'duration': 0.008, 'color': 'green'}
     ]
 
-    fig, axes = plt.subplots(2, 2, figsize=(15, 10), sharex=False, sharey=False)  # Rimosso sharex/sharey
+    fig, axes = plt.subplots(3, 1, figsize=(10, 8))
+    fig.suptitle('IR Sintetiche con Funzione di Bessel $J_1$', fontsize=16)
 
-    # Rendi gli assi un array piatto per l'iterazione
-    axes = axes.flatten()
+    # --- 2. Generazione e Plot delle Curve ---
+    for i, combo in enumerate(combinations):
+        kx = combo['kx']
+        duration = combo['duration']
 
-    fig.suptitle('Risposte all\'Impulso Sintetiche (Modelli Bessel)', fontsize=16)
+        # Calcola il numero di campioni
+        samples = int(Fs * duration)
 
-    for i, params in enumerate(bessel_configs):
-        model_name = params['ir_model'].capitalize()
+        # Crea l'asse temporale e i campioni
+        x = np.arange(0, samples, res)
+        time_ms = x / Fs * 1000  # Convertito in millisecondi (ms)
 
-        # 1. Istanzia l'effetto Cabinet
-        cabinet = CabinetEffect(ir_source='bessel', **params)
+        # Calcola la funzione di Bessel J1 (l'IR simulata)
+        y_impulse = j1(kx * x)
 
-        # 2. Estrai l'IR generata
-        # Per questa visualizzazione, rigeneriamo l'IR con la durata estesa direttamente,
-        # poiché la durata dell'IR in cabinet.py è fissa a 50ms per il processing audio.
-        # Questo è solo a scopo di visualizzazione nel test.
-        ir = CabinetEffect._generate_bessel_ir(SAMPLERATE,
-                                               ir_model=params['ir_model'],
-                                               kx=params['kx'],
-                                               offset=params['offset'],
-                                               alpha=params['alpha'])
+        # Plotta sul sotto-grafico corrente (axes[i])
+        axes[i].plot(time_ms, y_impulse, color=combo['color'])
 
-        # Se l'IR è più lunga di quanto previsto, la tagliamo per la visualizzazione coerente
-        samples_to_plot = int(SAMPLERATE * IR_DURATION)
-        if len(ir) > samples_to_plot:
-            ir = ir[:samples_to_plot]
+        # Aggiunge titolo e griglia
+        axes[i].set_title(combo['label'], fontsize=12, loc='left', pad=5)
+        axes[i].set_ylabel('Ampiezza')
+        axes[i].grid(True, linestyle='--', alpha=0.6)
+        axes[i].axhline(0, color='black', linewidth=0.5)
 
-        time_axis_samples = np.arange(ir.size)
-        time_axis_seconds = time_axis_samples / SAMPLERATE
+        # Imposta il limite X specifico per questa IR (aggiungendo un piccolo margine)
+        axes[i].set_xlim(-0.1, duration * 1000 * 1.05)  # Da -0.1 ms fino a un po' oltre la durata
 
-        # 3. Disegna sull'asse corrente con il colore specifico
-        axes[i].plot(time_axis_seconds, ir, linewidth=1.0, color=colors[i])
+        # Assicurati che l'asse Y sia lo stesso per tutti i grafici per un confronto visivo
+        axes[i].set_ylim(-0.35, 0.65)
 
-        # --- Aggiornamento del titolo per coerenza con il grafico precedente ---
-        title_str = f"{model_name}: J1({params['kx']}"
-        if model_name == 'Quadratic':
-            title_str += f" * x²)"
-        elif model_name == 'Offset':
-            title_str += f" * (x + {params['offset']}))"
-        elif model_name == 'Exp_decay':
-            title_str += f" * exp(-{params['alpha']} * x))"
-        else:  # Linear
-            title_str += f" * x)"
+        # Imposta l'etichetta dell'asse X solo sull'ultimo grafico
+    axes[-1].set_xlabel('Tempo (ms)', fontsize=12)
 
-        axes[i].set_title(title_str)
-        axes[i].set_ylabel("Ampiezza")
-        axes[i].grid(True)
-        axes[i].set_xlim(0, IR_DURATION)  # Imposta l'estensione dell'asse X
-
-    # Imposta l'etichetta X per tutti i grafici (o solo l'ultima riga se preferisci)
-    for ax in axes:  # Etichetta tutti per chiarezza con un layout più ampio
-        ax.set_xlabel("Tempo (secondi)")
-
-    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    # Regola la spaziatura tra i sotto-grafici
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])  # Lascia spazio per il titolo
     plt.show()
 
     print(f"Grafico IR Bessel completato.")

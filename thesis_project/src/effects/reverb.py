@@ -72,15 +72,19 @@ class ReverbEffect(AudioEffect):
             processed_signal = original_signal.copy()
 
             if channel_mode == 'both' or channel_mode == 'left':
-                processed_signal[:, 0] = fftconvolve(audio_signal[:, 0], ir, mode='full')[:len(audio_signal)]
+                wet_left = fftconvolve(audio_signal[:, 0], ir, mode='full')[:len(audio_signal)]
+                processed_signal[:, 0] = (1 - self.mix) * original_signal[:, 0] + self.mix * wet_left
 
             if channel_mode == 'both' or channel_mode == 'right':
-                processed_signal[:, 1] = fftconvolve(audio_signal[:, 1], ir, mode='full')[:len(audio_signal)]
+                wet_right = fftconvolve(audio_signal[:, 1], ir, mode='full')[:len(audio_signal)]
+                processed_signal[:, 1] = (1 - self.mix) * original_signal[:, 1] + self.mix * wet_right
 
         else:
             raise ValueError("Formato audio non supportato.")
 
+        # Normalizzazione finale
         if np.max(np.abs(processed_signal)) > 0:
             processed_signal /= np.max(np.abs(processed_signal))
 
-        return processed_signal
+        # Converto al tipo di dato originale
+        return processed_signal.astype(original_signal.dtype)

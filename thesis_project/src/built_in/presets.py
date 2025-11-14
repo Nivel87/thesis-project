@@ -151,45 +151,23 @@ def get_bessel_ir_params() -> Dict[str, Union[str, float]]:
         Parametri in output:
         - Dict[str, str | float] : dizionario contenente 'ir_model' e i parametri (kx, offset, alpha).
     """
-    MODELS = ["linear", "quadratic", "offset", "exp_decay"]
-    print("\nSeleziona il modello di Risposta all'Impulso Bessel:")
-    for i, model in enumerate(MODELS, 1):
-        print(f"{i}. {model.capitalize()}")
+    params: Dict[str, Union[str, float]] = {"ir_source": "bessel"}
 
-    selected_index = get_validated_input(
-        f"Seleziona il numero del modello: ",
-        lambda x: 1 <= x <= len(MODELS),
-        f"Selezione non valida. Inserisci un numero tra 1 e {len(MODELS)}.",
-        expected_type=int
+    print(f"\nInserisci i parametri:")
+
+    duration = get_validated_input(
+        "Inserisci il valore di duration: ",
+        lambda x: x > 0,
+        "Il valore di duration deve essere positivo."
     )
-    ir_model = MODELS[selected_index - 1]
-    params: Dict[str, Union[str, float]] = {"ir_source": "bessel", "ir_model": ir_model}
+    params["duration"] = duration
 
-    print(f"\nInserisci i parametri per il modello '{ir_model.capitalize()}':")
-
-    # Richiesta di kx per tutti i modelli
     kx = get_validated_input(
-        "Inserisci il valore di kx (es. 0.28 per linear): ",
+        "Inserisci il valore di kx: ",
         lambda x: x > 0,
         "Il valore di kx deve essere positivo."
     )
     params["kx"] = kx
-
-    # Parametri specifici per modello
-    if ir_model == "offset":
-        offset = get_validated_input(
-            "Inserisci il valore di offset (es. 1.0): ",
-            lambda x: x >= 0,
-            "Il valore di offset deve essere non negativo."
-        )
-        params["offset"] = offset
-    elif ir_model == "exp_decay":
-        alpha = get_validated_input(
-            "Inserisci il valore di decadimento alpha (es. 0.01): ",
-            lambda x: 0.0 <= x <= 1.0,
-            "Il valore di alpha deve essere tra 0.0 e 1.0."
-        )
-        params["alpha"] = alpha
 
     mix = get_validated_input(
         "Inserisci il mix dry/wet (valore tra 0.0 e 1.0): ",

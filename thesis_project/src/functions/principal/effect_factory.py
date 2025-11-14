@@ -6,21 +6,9 @@ from thesis_project.src.functions.principal.user_interaction import get_user_cho
 
 
 def make_effect(selected_effect: str, selected_params: dict) -> AudioEffect | None:
-    """
-        Crea l'istanza dell'effetto e ne recupera i parametri dai preset definiti.
-
-        Parametri in input:
-        - selected_effect: il nome dell'effetto da applicare
-        - selected_preset: il nome del preset di parametri con i quali applicare l'effetto
-        - base_path: il path contenente le risposte impulsive (solo per Cabinet)
-
-        Parametri in output:
-        - AudioEffect | None : l'oggetto AudioEffect costruito con il preset di parametri
-    """
     if not selected_params:
         return None
 
-    # Infine, crea l'istanza dell'effetto appropriato
     if selected_effect == "reverb":
         return ReverbEffect(**selected_params)
     elif selected_effect == "delay":
@@ -28,7 +16,6 @@ def make_effect(selected_effect: str, selected_params: dict) -> AudioEffect | No
     elif selected_effect == "ping_pong":
         return PingPongDelayEffect(**selected_params)
     elif selected_effect == "cabinet":
-        # Passa i parametri direttamente, inclusi 'ir_source' e 'ir_name' o 'ir_model'
         return CabinetEffect(**selected_params)
     else:
         raise ValueError(f"Effetto '{selected_effect}' non riconosciuto.")
@@ -72,9 +59,7 @@ def build_chain_effect() -> tuple[list[Any], list[Any]] | None:
             ir_source = selected_parameters.get("ir_source")
 
             if selected_preset == "custom (Bessel)":
-                # Caso Custom Bessel: usa il modello e il nome del preset
-                ir_model = selected_parameters.get("ir_model", "Sconosciuto")
-                display_name = f"Cabinet - Custom Bessel: {ir_model.capitalize()}"
+                display_name = "Cabinet - Custom Bessel"
             elif ir_source == "file":
                 # Caso Preset Standard (File IR)
                 display_name = f"Cabinet - File Preset: {selected_preset}"
